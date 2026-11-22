@@ -533,7 +533,7 @@ Lesson _opsLesson(VoidCallback onOpenPractice) {
         tr('Divisione in colonna', 'Long division'),
         before: [
           tr('Come la divisione in colonna che conosci: abbassi un bit alla '
-                  'volta e controlli se il divisore ci sta (scrivi 1) oppure no '
+                  'volta e controlli se il divisore sta (scrivi 1) oppure no '
                   '(scrivi 0).',
               'Just like the long division you know: bring down one bit at a '
                   'time and check whether the divisor fits (write 1) or not '

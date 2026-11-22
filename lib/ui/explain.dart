@@ -480,7 +480,7 @@ class DivBaseView extends StatelessWidget {
               TableRow(children: [
                 head(tr('abbasso', 'bring down')),
                 head(tr('ho', 'have')),
-                head(tr('${r.divisor} ci sta', '${r.divisor} fits')),
+                head(tr('${r.divisor} sta', '${r.divisor} fits')),
                 head(tr('resto', 'remainder')),
               ]),
               for (final s in r.steps)

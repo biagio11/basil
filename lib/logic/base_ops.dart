@@ -243,10 +243,10 @@ DivBaseResult divBase(String dividend, String divisor, int base) {
 String divStepTextBase(DivBaseStep s, DivBaseResult r) {
   final cur = toBase(s.current, r.base);
   if (s.qDigit == 0) {
-    return tr('Abbasso ${s.broughtDown}: ho $cur → ${r.divisor} non ci sta → 0',
+    return tr('Abbasso ${s.broughtDown}: ho $cur → ${r.divisor} non sta → 0',
         'Bring down ${s.broughtDown}: $cur → ${r.divisor} does not fit → 0');
   }
   return tr(
-      'Abbasso ${s.broughtDown}: ho $cur → ${r.divisor} ci sta ${dv(s.qDigit)} volte, resto ${toBase(s.remainder, r.base)}',
+      'Abbasso ${s.broughtDown}: ho $cur → ${r.divisor} sta ${dv(s.qDigit)} volte, resto ${toBase(s.remainder, r.base)}',
       'Bring down ${s.broughtDown}: $cur → ${r.divisor} fits ${dv(s.qDigit)} times, remainder ${toBase(s.remainder, r.base)}');
 }

@@ -318,7 +318,7 @@ class ExerciseGenerator {
           tr('Quoziente: ${r.quotient}', 'Quotient: ${r.quotient}'),
           _check(BigInt.from(q * dvs), op, BigInt.from(dvs), BigInt.from(q),
               r.quotient, base),
-        ], tr('Divisione in colonna: abbassa una cifra alla volta e chiediti quante volte ci sta il divisore.',
+        ], tr('Divisione in colonna: abbassa una cifra alla volta e chiediti quante volte sta il divisore.',
             'Long division: bring down one digit at a time and ask how many times the divisor fits.'));
     }
   }

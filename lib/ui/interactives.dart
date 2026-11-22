@@ -762,7 +762,7 @@ class DivBinView extends StatelessWidget {
               TableRow(children: [
                 head(tr('abbasso', 'bring down')),
                 head(tr('ho', 'have')),
-                head(tr('$divisor ci sta?', 'fits $divisor?')),
+                head(tr('$divisor sta?', 'fits $divisor?')),
                 head(tr('resto', 'remainder')),
               ]),
               for (final s in r.steps)

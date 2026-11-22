@@ -239,12 +239,12 @@ String divStepText(DivBinStep s, String divisor) {
   final cur = toBase(s.current, 2);
   if (s.qBit == 1) {
     return tr(
-        'Abbasso ${s.broughtDown}: ho $cur → $divisor ci sta (1), '
+        'Abbasso ${s.broughtDown}: ho $cur → $divisor sta (1), '
             'resto ${toBase(s.remainder, 2)}',
         'Bring down ${s.broughtDown}: $cur → $divisor fits (1), '
             'remainder ${toBase(s.remainder, 2)}');
   }
-  return tr('Abbasso ${s.broughtDown}: ho $cur → $divisor non ci sta (0)',
+  return tr('Abbasso ${s.broughtDown}: ho $cur → $divisor non sta (0)',
       'Bring down ${s.broughtDown}: $cur → $divisor does not fit (0)');
 }
 
