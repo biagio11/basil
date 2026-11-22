@@ -4,6 +4,9 @@ import '../app/settings.dart';
 import '../logic/base_conv.dart';
 import '../ui/common.dart';
 import '../ui/interactives.dart';
+import '../ui/signed_widgets.dart';
+
+part 'signed_lesson.dart';
 
 class Slide {
   Slide(this.title, this.build);
@@ -115,6 +118,7 @@ List<Lesson> buildLessons({required VoidCallback onOpenPractice}) {
     _baseLesson(onOpenPractice),
     _opsLesson(onOpenPractice),
     _fracLesson(onOpenPractice),
+    _signedLesson(onOpenPractice),
   ];
 }
 
