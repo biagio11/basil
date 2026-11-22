@@ -159,9 +159,17 @@ class _LessonPlayerState extends State<LessonPlayer> {
     super.dispose();
   }
 
-  void _go(int i, int count) {
+  /// Slide we are heading to; differs from [_index] while a page animates,
+  /// so quick repeated arrow presses keep moving forward.
+  int _target = 0;
+  bool _moving = false;
+
+  Future<void> _go(int i, int count) async {
     if (i < 0 || i >= count) return;
-    _pc.animateToPage(i, duration: const Duration(milliseconds: 260), curve: Curves.easeOutCubic);
+    _target = i;
+    _moving = true;
+    await _pc.animateToPage(i, duration: const Duration(milliseconds: 260), curve: Curves.easeOutCubic);
+    if (_target == i) _moving = false;
   }
 
   void _showJumpList(Lesson lesson) {
@@ -183,6 +191,7 @@ class _LessonPlayerState extends State<LessonPlayer> {
                 selected: i == _index,
                 onTap: () {
                   Navigator.of(sheetContext).pop();
+                  _target = i;
                   _pc.jumpToPage(i);
                 },
               ),
@@ -203,11 +212,11 @@ class _LessonPlayerState extends State<LessonPlayer> {
       onKeyEvent: (node, event) {
         if (event is! KeyDownEvent) return KeyEventResult.ignored;
         if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
-          _go(_index + 1, count);
+          _go((_moving ? _target : _index) + 1, count);
           return KeyEventResult.handled;
         }
         if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
-          _go(_index - 1, count);
+          _go((_moving ? _target : _index) - 1, count);
           return KeyEventResult.handled;
         }
         return KeyEventResult.ignored;
@@ -242,7 +251,10 @@ class _LessonPlayerState extends State<LessonPlayer> {
               child: PageView.builder(
                 controller: _pc,
                 itemCount: count,
-                onPageChanged: (i) => setState(() => _index = i),
+                onPageChanged: (i) => setState(() {
+                  _index = i;
+                  if (!_moving) _target = i;
+                }),
                 itemBuilder: (context, i) => _SlideView(slide: slides[i], classMode: _classMode, n: i + 1),
               ),
             ),
