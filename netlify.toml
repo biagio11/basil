@@ -1,0 +1,5 @@
+# Basil on Netlify. Security and cache headers live in web/_headers
+# (copied into build/web), so they apply to Git builds and CLI deploys alike.
+[build]
+  command = "bash build_netlify.sh"
+  publish = "build/web"
