@@ -4,11 +4,14 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../app/files.dart';
+import '../app/pdf_docs.dart';
 import '../app/settings.dart';
 import '../logic/base_ops.dart';
 import '../logic/exercises.dart';
 import 'common.dart';
 import 'converter_screen.dart' show isTouchLayout;
+import 'share_sheet.dart';
 import 'widgets/base_wheel.dart';
 import 'widgets/fx.dart';
 import 'widgets/keypad.dart';
@@ -449,7 +452,7 @@ class _DifficultyPicker extends StatelessWidget {
 // Timed challenge
 // ---------------------------------------------------------------------------
 
-enum ChallengeMode { conversions, operations, mixed }
+enum ChallengeMode { conversions, operations, mixed, twos }
 
 class ChallengeConfig {
   ChallengeConfig({
@@ -478,6 +481,7 @@ class ChallengeConfig {
       ChallengeMode.conversions => 'c|$conv|${difficulty.index}|$count',
       ChallengeMode.operations => 'o|$opBase|$o|${difficulty.index}|$count',
       ChallengeMode.mixed => 'm|$conv|$opBase|$o|${difficulty.index}|$count',
+      ChallengeMode.twos => 't|${difficulty.index}|$count',
     };
   }
 
@@ -488,6 +492,7 @@ class ChallengeConfig {
       ChallengeMode.conversions => '${tr('Conversioni', 'Conversions')} $conv',
       ChallengeMode.operations => '${tr('Operazioni', 'Operations')} $o ${tr('in base', 'in base')} $opBase',
       ChallengeMode.mixed => '${tr('Misto', 'Mixed')} · $conv · $o (b$opBase)',
+      ChallengeMode.twos => tr('Complemento a 2', 'Two’s complement'),
     };
     return '$what · ${difficulty.label} · $count';
   }
@@ -515,6 +520,7 @@ class ChallengeConfig {
       ChallengeMode.conversions => conv(),
       ChallengeMode.operations => op(),
       ChallengeMode.mixed => r.nextBool() ? conv() : op(),
+      ChallengeMode.twos => g.twos(difficulty),
     };
   }
 }
@@ -547,9 +553,49 @@ class _ChallengeSetupState extends State<_ChallengeSetup> {
         count: _count,
       );
 
+  bool _making = false;
+
+  /// Paper version of the current setup, with the answer key at the end.
+  Future<void> _worksheet() async {
+    if (_making) return;
+    if (showConvFor(_mode) && !_random && _from == _to) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(tr('Scegli due basi diverse', 'Pick two different bases'))));
+      return;
+    }
+    final w = reserveWindow();
+    setState(() => _making = true);
+    try {
+      final cfg = _config;
+      final gen = ExerciseGenerator();
+      final rng = Random();
+      final seen = <String>{};
+      final items = <Exercise>[];
+      for (var i = 0; i < cfg.count; i++) {
+        var ex = cfg.make(gen, rng);
+        for (var k = 0; k < 12 && seen.contains(ex.prompt); k++) {
+          ex = cfg.make(gen, rng);
+        }
+        seen.add(ex.prompt);
+        items.add(ex);
+      }
+      final pdf = await worksheetPdf(items, cfg.label);
+      final d = DateTime.now();
+      final name = 'basil-scheda-${d.year}${d.month.toString().padLeft(2, '0')}${d.day.toString().padLeft(2, '0')}.pdf';
+      await showPdf(pdf, name, window: w);
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(tr('Impossibile creare il PDF', 'Could not create the PDF'))));
+      }
+    } finally {
+      if (mounted) setState(() => _making = false);
+    }
+  }
+
   void _start() {
-    if (_mode != ChallengeMode.conversions && _ops.isEmpty) return;
-    if (_mode != ChallengeMode.operations && !_random && _from == _to) {
+    if ((_mode == ChallengeMode.operations || _mode == ChallengeMode.mixed) && _ops.isEmpty) return;
+    if (showConvFor(_mode) && !_random && _from == _to) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(tr('Scegli due basi diverse', 'Pick two different bases'))));
       return;
@@ -565,8 +611,8 @@ class _ChallengeSetupState extends State<_ChallengeSetup> {
     final cs = context.cs;
     final best = AppSettings.instance.history.where((r) => r.key == _config.key).fold<TrainingRecord?>(
         null, (b, r) => b == null || r.betterThan(b) ? r : b);
-    final showConv = _mode != ChallengeMode.operations;
-    final showOps = _mode != ChallengeMode.conversions;
+    final showConv = _mode == ChallengeMode.conversions || _mode == ChallengeMode.mixed;
+    final showOps = _mode == ChallengeMode.operations || _mode == ChallengeMode.mixed;
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(14, 0, 14, 28),
@@ -580,6 +626,7 @@ class _ChallengeSetupState extends State<_ChallengeSetup> {
                 ButtonSegment(value: ChallengeMode.conversions, label: Text(tr('Conversioni', 'Conversions'), style: const TextStyle(fontSize: 12))),
                 ButtonSegment(value: ChallengeMode.operations, label: Text(tr('Operazioni', 'Operations'), style: const TextStyle(fontSize: 12))),
                 ButtonSegment(value: ChallengeMode.mixed, label: Text(tr('Misto', 'Mixed'), style: const TextStyle(fontSize: 12))),
+                ButtonSegment(value: ChallengeMode.twos, label: Text(tr('Compl. 2', 'Two’s c.'), style: const TextStyle(fontSize: 12))),
               ],
               selected: {_mode},
               onSelectionChanged: (v) => setState(() => _mode = v.first),
@@ -751,6 +798,12 @@ class _ChallengeSetupState extends State<_ChallengeSetup> {
             icon: const Icon(Icons.play_arrow_rounded, size: 28),
             label: Text(tr('VIA!', 'START'), style: pixelStyle(size: 18)),
           ),
+        ),
+        const SizedBox(height: 10),
+        OutlinedButton.icon(
+          onPressed: _worksheet,
+          icon: const Icon(Icons.print_outlined, size: 18),
+          label: Text(tr('Scheda da stampare (PDF)', 'Printable sheet (PDF)')),
         ),
         const SizedBox(height: 8),
         Text(
@@ -1110,6 +1163,27 @@ class _ChallengeRunState extends State<ChallengeRun> {
                 ),
               ],
             ),
+            const SizedBox(height: 8),
+            OutlinedButton.icon(
+              onPressed: () => showResultShare(
+                context,
+                ShareData(
+                  label: widget.config.label,
+                  correct: correct,
+                  total: total,
+                  millis: ms,
+                  newBest: _newBest,
+                  buildPdf: () => resultsPdf(
+                    [for (final d in _done) ResultRow(d.ex, d.given, d.ok, d.millis)],
+                    widget.config.label,
+                    ms,
+                    DateTime.now(),
+                  ),
+                ),
+              ),
+              icon: const Icon(Icons.ios_share, size: 18),
+              label: Text(tr('Condividi, stampa o PDF', 'Share, print or PDF')),
+            ),
             const SizedBox(height: 18),
             if (wrong.isNotEmpty) ...[
               Text(tr('DA RIVEDERE', 'TO REVIEW'), style: pixelStyle(size: 12, color: cs.onSurfaceVariant)),
@@ -1254,3 +1328,5 @@ class _RecordsView extends StatelessWidget {
     );
   }
 }
+
+bool showConvFor(ChallengeMode m) => m == ChallengeMode.conversions || m == ChallengeMode.mixed;
