@@ -1,0 +1,17 @@
+:root { --bg: #060B07; --panel: #0B150E; --fg: #D3F8DA; --muted: #8FB89A; --accent: #3DFF7A; --line: #1B3322; }
+@media (prefers-color-scheme: light) {
+  :root { --bg: #F2F8F0; --panel: #FFFFFF; --fg: #0B1F12; --muted: #41594A; --accent: #0B7A36; --line: #C9DECB; }
+}
+* { box-sizing: border-box; }
+html { background: var(--bg); }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 15px/1.65 ui-monospace, "Cascadia Mono", Menlo, Consolas, monospace; }
+header { position: sticky; top: 0; display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 16px; background: var(--bg); border-bottom: 1px solid var(--line); }
+.brand { display: flex; align-items: center; gap: 8px; color: var(--accent); font-weight: 800; letter-spacing: .3em; text-decoration: none; }
+.brand img { image-rendering: pixelated; }
+nav a, footer a { color: var(--accent); }
+main { max-width: 760px; margin: 0 auto; padding: 16px; }
+h1 { color: var(--accent); font-size: 1.5rem; margin-top: 1.5rem; }
+h2 { font-size: 1.05rem; margin-top: 1.6rem; border-left: 3px solid var(--accent); padding-left: 10px; }
+.intro { background: var(--panel); border: 1px solid var(--line); padding: 12px 14px; border-radius: 6px; }
+hr { border: 0; border-top: 1px dashed var(--line); margin: 40px 0; }
+footer { text-align: center; color: var(--muted); padding: 24px 16px 40px; font-size: 13px; }
