@@ -11,6 +11,7 @@ import 'train_screen.dart';
 import 'widgets/fx.dart';
 import 'widgets/matrix_rain.dart';
 import 'widgets/pixel_leaf.dart';
+import 'widgets/theme_reveal.dart';
 
 class HomeShell extends StatefulWidget {
   const HomeShell({super.key});
@@ -87,9 +88,10 @@ class _HomeShellState extends State<HomeShell> {
           child: Text(s.lang == 'it' ? 'IT' : 'EN',
               style: pixelStyle(size: 12, color: cs.primary)),
         ),
-        IconButton(
+        Builder(builder: (btn) => IconButton(
           tooltip: tr('Tema chiaro/scuro', 'Light/dark theme'),
-          onPressed: () => s.setTheme(context.isDark ? ThemeMode.light : ThemeMode.dark),
+          onPressed: () => switchTheme(btn, context.isDark ? ThemeMode.light : ThemeMode.dark,
+              from: centerOf(btn)),
           icon: AnimatedSwitcher(
             duration: const Duration(milliseconds: 300),
             transitionBuilder: (c, a) => RotationTransition(
@@ -98,7 +100,7 @@ class _HomeShellState extends State<HomeShell> {
             child: Icon(context.isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
                 key: ValueKey(context.isDark)),
           ),
-        ),
+        )),
         IconButton(
           tooltip: tr('Impostazioni', 'Settings'),
           onPressed: () => Navigator.of(context)

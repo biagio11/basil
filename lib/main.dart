@@ -6,6 +6,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'app/settings.dart';
 import 'app/theme.dart';
 import 'ui/shell.dart';
+import 'ui/widgets/theme_reveal.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -42,7 +43,7 @@ class BasilApp extends StatelessWidget {
           theme: buildTheme(Brightness.light),
           darkTheme: buildTheme(Brightness.dark),
           themeMode: s.themeMode,
-          themeAnimationDuration: const Duration(milliseconds: 350),
+          themeAnimationDuration: Duration.zero,
           locale: Locale(s.lang),
           supportedLocales: const [Locale('it'), Locale('en')],
           localizationsDelegates: GlobalMaterialLocalizations.delegates,
@@ -57,7 +58,7 @@ class BasilApp extends StatelessWidget {
             return MediaQuery(
               data: mq.copyWith(
                   textScaler: mq.textScaler.clamp(minScaleFactor: 0.9, maxScaleFactor: 1.35)),
-              child: BasilBackground(child: child ?? const SizedBox()),
+              child: ThemeReveal(child: BasilBackground(child: child ?? const SizedBox())),
             );
           },
           home: KeyedSubtree(key: ValueKey(s.lang), child: const HomeShell()),
