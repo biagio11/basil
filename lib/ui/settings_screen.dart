@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter/services.dart' show rootBundle;
+import '../app/files.dart';
 
 import '../app/config.dart';
 import '../app/settings.dart';
@@ -7,6 +8,7 @@ import '../content/legal.dart';
 import 'common.dart';
 import 'widgets/fx.dart';
 import 'widgets/pixel_leaf.dart';
+import 'widgets/theme_reveal.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -40,7 +42,7 @@ class SettingsScreen extends StatelessWidget {
                       ButtonSegment(value: ThemeMode.system, icon: const Icon(Icons.brightness_auto_outlined, size: 18), label: Text(tr('Auto', 'Auto'))),
                     ],
                     selected: {s.themeMode},
-                    onSelectionChanged: (v) => s.setTheme(v.first),
+                    onSelectionChanged: (v) => switchTheme(context, v.first),
                   ),
                   const SizedBox(height: 10),
                   SegmentedButton<String>(
@@ -100,19 +102,11 @@ class SettingsScreen extends StatelessWidget {
                       () => openLegal(context, privacyDoc)),
                   _tile(context, Icons.gavel_outlined, tr('Termini di utilizzo', 'Terms of Use'),
                       () => openLegal(context, termsDoc)),
-                  _tile(context, Icons.code, tr('Codice sorgente su GitHub', 'Source code on GitHub'),
-                      () => _open(kRepoUrl)),
-                  _tile(context, Icons.bug_report_outlined, tr('Segnala un problema', 'Report a problem'),
-                      () => _open(kIssuesUrl)),
-                  _tile(context, Icons.description_outlined, tr('Licenze', 'Licences'), () {
-                    showLicensePage(
-                      context: context,
-                      applicationName: 'Basil',
-                      applicationVersion: kAppVersion,
-                      applicationIcon: const Padding(
-                          padding: EdgeInsets.all(12), child: PixelLeaf(size: 48)),
-                    );
-                  }),
+                  _linkTile(context, Icons.code, tr('Codice sorgente su GitHub', 'Source code on GitHub'), kRepoUrl),
+                  _linkTile(context, Icons.bug_report_outlined, tr('Segnala un problema', 'Report a problem'), kIssuesUrl),
+                  _tile(context, Icons.description_outlined, tr('Licenze', 'Licences'),
+                      () => Navigator.of(context).push(
+                          MaterialPageRoute<void>(builder: (_) => const LicencesScreen()))),
                   _tile(context, Icons.delete_forever_outlined, tr('Cancella tutti i dati', 'Delete all data'), () async {
                     final ok = await showDialog<bool>(
                       context: context,
@@ -152,10 +146,16 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
-  Future<void> _open(String url) async {
-    try {
-      await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
-    } catch (_) {}
+  /// Opens an external page in a new tab (web) or the browser (phone).
+  Widget _linkTile(BuildContext context, IconData icon, String title, String url) {
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 4),
+      leading: Icon(icon),
+      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
+      subtitle: Text(url.replaceFirst('https://', ''), style: const TextStyle(fontSize: 11)),
+      trailing: const Icon(Icons.open_in_new, size: 18),
+      onTap: () => openExternal(url),
+    );
   }
 
   Widget _tile(BuildContext context, IconData icon, String title, VoidCallback onTap, {bool danger = false}) {
@@ -205,6 +205,93 @@ class LegalScreen extends StatelessWidget {
                 ],
               ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Basil's own licences (fast), with the full component list one tap away.
+class LicencesScreen extends StatelessWidget {
+  const LicencesScreen({super.key});
+
+  static const _mit = 'MIT License\n\nCopyright (c) 2026 biagio11\n\n'
+      'Permission is hereby granted, free of charge, to any person obtaining a copy of this software '
+      'and associated documentation files (the "Software"), to deal in the Software without restriction, '
+      'including without limitation the rights to use, copy, modify, merge, publish, distribute, '
+      'sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is '
+      'furnished to do so, subject to the following conditions:\n\n'
+      'The above copyright notice and this permission notice shall be included in all copies or '
+      'substantial portions of the Software.\n\n'
+      'THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT '
+      'NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND '
+      'NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, '
+      'DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT '
+      'OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.';
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = context.cs;
+    Widget item(String title, String sub, Future<String> Function() text) => Card(
+          child: ExpansionTile(
+            shape: const Border(),
+            title: Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
+            subtitle: Text(sub, style: const TextStyle(fontSize: 12)),
+            childrenPadding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
+            children: [
+              FutureBuilder<String>(
+                future: text(),
+                builder: (context, s) => SelectableText(s.data ?? '...',
+                    style: monoStyle(size: 11, color: cs.onSurfaceVariant)),
+              ),
+            ],
+          ),
+        );
+    return Scaffold(
+      appBar: AppBar(title: Text(tr('Licenze', 'Licences'))),
+      body: Align(
+        alignment: Alignment.topCenter,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 760),
+          child: ListView(
+            padding: const EdgeInsets.all(14),
+            children: [
+              const Center(child: BasilLogo(size: 30)),
+              const SizedBox(height: 6),
+              Center(child: Text('v$kAppVersion', style: Theme.of(context).textTheme.bodySmall)),
+              const SizedBox(height: 16),
+              item('Basil', 'MIT', () async => _mit),
+              const SizedBox(height: 8),
+              item('JetBrains Mono', 'SIL Open Font License 1.1',
+                  () => rootBundle.loadString('assets/fonts/OFL-JetBrainsMono.txt')),
+              const SizedBox(height: 8),
+              item('VT323', 'SIL Open Font License 1.1',
+                  () => rootBundle.loadString('assets/fonts/OFL-VT323.txt')),
+              const SizedBox(height: 8),
+              item('Silkscreen', 'SIL Open Font License 1.1',
+                  () => rootBundle.loadString('assets/fonts/OFL-Silkscreen.txt')),
+              const SizedBox(height: 16),
+              OutlinedButton.icon(
+                onPressed: () => showLicensePage(
+                  context: context,
+                  applicationName: 'Basil',
+                  applicationVersion: kAppVersion,
+                  applicationIcon:
+                      const Padding(padding: EdgeInsets.all(12), child: PixelLeaf(size: 48)),
+                ),
+                icon: const Icon(Icons.list_alt),
+                label: Text(tr('Tutti i componenti (Flutter e pacchetti)',
+                    'All components (Flutter and packages)')),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                tr('L’elenco completo è lungo: può servire qualche secondo per aprirlo.',
+                    'The full list is long: it can take a few seconds to open.'),
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ],
           ),
         ),
       ),
