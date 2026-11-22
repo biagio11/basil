@@ -10,19 +10,5 @@
   X-Permitted-Cross-Domain-Policies: none
   X-DNS-Prefetch-Control: off
 
-/index.html
-  Cache-Control: no-cache
-/
-  Cache-Control: no-cache
-/flutter_bootstrap.js
-  Cache-Control: no-cache
-/main.dart.js
-  Cache-Control: no-cache
-/version.json
-  Cache-Control: no-cache
-/manifest.json
-  Cache-Control: no-cache
-/canvaskit/*
-  Cache-Control: public, max-age=604800
-/assets/fonts/*
-  Cache-Control: public, max-age=2592000, immutable
+/*
+  Cache-Control: public, max-age=0, must-revalidate
