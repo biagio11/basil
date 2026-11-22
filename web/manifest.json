@@ -1,0 +1,21 @@
+{
+    "name": "Basil · base converter",
+    "short_name": "Basil",
+    "id": "/",
+    "start_url": "./",
+    "scope": "./",
+    "display": "standalone",
+    "background_color": "#060B07",
+    "theme_color": "#060B07",
+    "description": "Number base converter for bases 2 to 36 with explanations, a calculator, lessons and timed exercises.",
+    "lang": "it",
+    "categories": ["education", "utilities"],
+    "orientation": "any",
+    "prefer_related_applications": false,
+    "icons": [
+        { "src": "icons/Icon-192.png", "sizes": "192x192", "type": "image/png" },
+        { "src": "icons/Icon-512.png", "sizes": "512x512", "type": "image/png" },
+        { "src": "icons/Icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+        { "src": "icons/Icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    ]
+}
