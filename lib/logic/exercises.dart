@@ -6,6 +6,7 @@ import 'dart:math';
 import '../app/i18n.dart';
 import 'base_conv.dart';
 import 'base_ops.dart';
+import 'signed.dart';
 
 enum Difficulty {
   easy,
@@ -29,7 +30,12 @@ class Exercise {
     required this.solution,
     this.question = '',
     this.questionBase = 10,
+    this.caption,
   });
+
+  /// Short task description for printed sheets, when the default
+  /// "convert to base N" would be misleading.
+  final String? caption;
 
   final String category;
   final String prompt;
@@ -44,11 +50,22 @@ class Exercise {
   final int answerBase;
   final List<String> solution;
 
+  /// Signed value of a cleaned answer, or null when it is not valid.
+  BigInt? _value(String s) {
+    var t = cleanInput(s).replaceAll('−', '-').replaceFirst(RegExp(r'^\+'), '');
+    var neg = false;
+    if (t.startsWith('-')) {
+      neg = true;
+      t = t.substring(1);
+    }
+    if (t.isEmpty || t.length > 80 || !isValidInBase(t, answerBase)) return null;
+    final v = parseInBase(t, answerBase);
+    return neg ? -v : v;
+  }
+
   bool check(String input) {
-    final t = cleanInput(input).replaceFirst(RegExp(r'^\+'), '');
-    if (t.isEmpty || t.length > 80) return false;
-    if (!isValidInBase(t, answerBase)) return false;
-    return parseInBase(t, answerBase) == parseInBase(answer, answerBase);
+    final v = _value(input);
+    return v != null && v == _value(answer);
   }
 
   String get answerDisplay =>
@@ -161,7 +178,8 @@ enum Topic {
   octal,
   anyBase,
   binOps,
-  anyOps;
+  anyOps,
+  twos;
 
   String get label => switch (this) {
         Topic.binDec => tr('Binario ↔ decimale', 'Binary ↔ decimal'),
@@ -170,6 +188,7 @@ enum Topic {
         Topic.anyBase => tr('Base X → Y', 'Base X → Y'),
         Topic.binOps => tr('Operazioni binarie', 'Binary operations'),
         Topic.anyOps => tr('Operazioni in base X', 'Operations in base X'),
+        Topic.twos => tr('Complemento a 2', 'Two’s complement'),
       };
 }
 
@@ -221,7 +240,62 @@ class ExerciseGenerator {
         return operation(_pick(Op.values), 2, d);
       case Topic.anyOps:
         return operation(_pick(Op.values), _pick(const [3, 4, 5, 8, 16]), d);
+      case Topic.twos:
+        return twos(d);
     }
+  }
+
+  /// Two's complement: decimal to bits or bits to decimal.
+  Exercise twos(Difficulty d) {
+    final bits = d == Difficulty.easy ? 4 : 8;
+    final (lo, hi) = twosRange(bits);
+    var n = _between(lo, hi);
+    // Mostly negative numbers, they are the interesting ones.
+    if (n >= 0 && _r.nextInt(4) != 0) n = -n - 1;
+    final pattern = toTwos(n, bits);
+    final toBits = d == Difficulty.hard ? _r.nextBool() : d != Difficulty.medium || _r.nextInt(3) != 0;
+    final steps = twosSteps(n, bits);
+    final weights = [
+      for (var i = 0; i < bits; i++)
+        if (pattern[i] == '1') i == 0 ? '-${1 << (bits - 1)}' : '${1 << (bits - 1 - i)}'
+    ];
+    final readLine = tr(
+        'Il primo bit vale -${1 << (bits - 1)}: ${weights.isEmpty ? '0' : weights.join(' + ')} = $n',
+        'The first bit is worth -${1 << (bits - 1)}: ${weights.isEmpty ? '0' : weights.join(' + ')} = $n');
+    if (toBits) {
+      return Exercise(
+        category: tr('Complemento a 2 su $bits bit', 'Two’s complement on $bits bits'),
+        prompt: tr('Scrivi $n in complemento a 2 su $bits bit', 'Write $n in two’s complement on $bits bits'),
+        question: '$n',
+        questionBase: 10,
+        caption: tr('in complemento a 2 su $bits bit', 'in two’s complement on $bits bits'),
+        hint: tr('Se è negativo: scrivi il valore assoluto in binario su $bits bit, inverti i bit e aggiungi 1.',
+            'If it is negative: write the absolute value in binary on $bits bits, invert the bits and add 1.'),
+        answer: pattern,
+        answerBase: 2,
+        solution: n >= 0
+            ? [tr('Positivo: binario su $bits bit = $pattern', 'Positive: binary on $bits bits = $pattern')]
+            : [
+                tr('|$n| in binario su $bits bit: ${steps.magnitude}', '|$n| in binary on $bits bits: ${steps.magnitude}'),
+                tr('Inverto i bit: ${steps.inverted}', 'Invert the bits: ${steps.inverted}'),
+                tr('Aggiungo 1: $pattern', 'Add 1: $pattern'),
+                readLine,
+              ],
+      );
+    }
+    return Exercise(
+      category: tr('Complemento a 2 su $bits bit', 'Two’s complement on $bits bits'),
+      prompt: tr('Quanto vale $pattern (complemento a 2 su $bits bit) in base 10?',
+          'What is $pattern (two’s complement on $bits bits) in base 10?'),
+      question: pattern,
+      questionBase: 2,
+      caption: tr('complemento a 2 su $bits bit, in base 10', 'two’s complement on $bits bits, in base 10'),
+      hint: tr('Il primo bit ha peso negativo: -${1 << (bits - 1)}. Gli altri valgono come sempre.',
+          'The first bit has a negative weight: -${1 << (bits - 1)}. The others are worth the usual.'),
+      answer: '$n',
+      answerBase: 10,
+      solution: [readLine],
+    );
   }
 
   /// Integer conversion exercise between any two bases.

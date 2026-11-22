@@ -6,6 +6,7 @@ import 'package:basil/logic/base_ops.dart';
 import 'package:basil/logic/binary_ops.dart';
 import 'package:basil/logic/exercises.dart';
 import 'package:basil/logic/numbers.dart';
+import 'package:basil/logic/signed.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -107,7 +108,7 @@ void main() {
               final ex = gen.topic(t, d);
               expect(ex.check(ex.answer), isTrue, reason: '${ex.prompt} -> ${ex.answer}');
               expect(ex.check(ex.answer.toLowerCase()), isTrue);
-              expect(ex.check('00${ex.answer}'), isTrue);
+              if (!ex.answer.startsWith('-')) expect(ex.check('00${ex.answer}'), isTrue);
               expect(ex.solution, isNotEmpty);
             }
           }
@@ -229,6 +230,40 @@ void main() {
       final r = subBase('11', '101', 2);
       expect(r.negative, isTrue);
       expect(r.result, '10');
+    });
+  });
+
+  group('signed numbers', () {
+    test('representations of -5 on 8 bits', () {
+      expect(toSignMagnitude(-5, 8), '10000101');
+      expect(toOnes(-5, 8), '11111010');
+      expect(toTwos(-5, 8), '11111011');
+      expect(twosValue(0xFB, 8), -5);
+      expect(signMagnitudeValue(0x80, 8), '-0');
+      expect(onesValue(0xFF, 8), '-0');
+      expect(twosRange(4), (-8, 7));
+    });
+
+    test('two complement round trips', () {
+      for (var n = -128; n < 128; n++) {
+        expect(twosValue(int.parse(toTwos(n, 8), radix: 2), 8), n);
+      }
+    });
+
+    test('two complement exercises accept their answers', () {
+      final gen = ExerciseGenerator(Random(11));
+      for (final d in Difficulty.values) {
+        for (var i = 0; i < 200; i++) {
+          final ex = gen.twos(d);
+          expect(ex.check(ex.answer), isTrue, reason: ex.prompt);
+          expect(ex.solution, isNotEmpty);
+          if (ex.answerBase == 10) {
+            final n = int.parse(ex.answer);
+            expect(ex.check('${n + 1}'), isFalse);
+            if (n < 0) expect(ex.check('${-n}'), isFalse);
+          }
+        }
+      }
     });
   });
 }
