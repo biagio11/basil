@@ -848,6 +848,7 @@ class _ChallengeRunState extends State<ChallengeRun> {
   int _shake = 0;
   bool _finished = false;
   bool _newBest = false;
+  TrainingRecord? _prevBest;
 
   final Set<String> _seen = {};
 
@@ -935,6 +936,9 @@ class _ChallengeRunState extends State<ChallengeRun> {
       millis: _watch.elapsedMilliseconds,
       when: DateTime.now(),
     );
+    for (final r in AppSettings.instance.history) {
+      if (r.key == rec.key && (_prevBest == null || r.betterThan(_prevBest!))) _prevBest = r;
+    }
     _newBest = AppSettings.instance.addRecord(rec);
     setState(() {
       _finished = true;
@@ -1100,58 +1104,145 @@ class _ChallengeRunState extends State<ChallengeRun> {
     final avg = total == 0 ? 0 : ms ~/ total;
     final pct = total == 0 ? 0 : (correct * 100 / total).round();
     final wrong = _done.where((d) => !d.ok).toList();
+    final (title, line) = switch (pct) {
+      100 => (tr('Perfetto', 'Perfect'), tr('Tutto giusto, niente da ripassare.', 'All correct, nothing to review.')),
+      >= 80 => (tr('Ottimo', 'Great'), tr('Quasi tutto giusto. Sotto trovi cosa ripassare.', 'Almost all correct. Below is what to review.')),
+      >= 50 => (tr('Ci sei quasi', 'Getting there'), tr('Ripassa gli errori e riprova.', 'Review the mistakes and try again.')),
+      _ => (tr('Da ripassare', 'Needs review'), tr('Apri le soluzioni qui sotto, poi riprova con calma.', 'Open the solutions below, then try again calmly.')),
+    };
+    final prev = _prevBest;
+    String? compare;
+    if (prev != null) {
+      if (_newBest) {
+        compare = prev.correct < correct
+            ? tr('Record precedente ${prev.correct}/${prev.total}', 'Previous best ${prev.correct}/${prev.total}')
+            : tr('${((prev.millis - ms) / 1000).toStringAsFixed(1)}s più veloce del record precedente',
+                '${((prev.millis - ms) / 1000).toStringAsFixed(1)}s faster than your previous best');
+      } else {
+        compare = tr('Record ${prev.correct}/${prev.total} in ${formatMillis(prev.millis)}',
+            'Best ${prev.correct}/${prev.total} in ${formatMillis(prev.millis)}');
+      }
+    }
+    final ringColor = pct == 100 ? bc.ok : (pct >= 50 ? cs.primary : bc.accent);
+
     return Align(
       key: const ValueKey('res'),
       alignment: Alignment.topCenter,
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 640),
+        constraints: const BoxConstraints(maxWidth: 560),
         child: ListView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 28),
           children: [
-            if (_newBest)
-              Appear(
-                child: Container(
-                  padding: const EdgeInsets.all(12),
-                  margin: const EdgeInsets.only(bottom: 12),
-                  decoration: BoxDecoration(
-                    color: bc.accent.withAlpha(30),
-                    border: Border.all(color: bc.accent),
-                    borderRadius: appLook.br(6),
-                  ),
-                  child: Row(children: [
-                    Icon(Icons.emoji_events, color: bc.accent),
-                    const SizedBox(width: 10),
-                    Text(tr('NUOVO RECORD!', 'NEW RECORD!'), style: pixelStyle(size: 16, color: bc.accent)),
-                  ]),
-                ),
-              ),
             Appear(
               child: Panel(
                 title: widget.config.label,
-                highlight: true,
-                child: Wrap(
-                  spacing: 22,
-                  runSpacing: 14,
+                highlight: _newBest,
+                child: Row(
                   children: [
-                    _big(context, formatMillis(ms), tr('tempo', 'time'), cs.primary),
-                    _big(context, '$correct/$total', tr('giuste', 'correct'), bc.ok),
-                    _big(context, '$pct%', tr('precisione', 'accuracy'), pct >= 80 ? bc.ok : bc.accent),
-                    _big(context, '${(avg / 1000).toStringAsFixed(1)}s', tr('media', 'avg'), cs.onSurface),
+                    _ScoreRing(value: total == 0 ? 0 : correct / total, color: ringColor, label: '$correct/$total'),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 6,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            children: [
+                              Text(title, style: pixelStyle(size: 17, color: cs.onSurface)),
+                              if (_newBest)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                                  decoration: BoxDecoration(
+                                    color: bc.accent.withAlpha(36),
+                                    border: Border.all(color: bc.accent.withAlpha(160)),
+                                    borderRadius: appLook.br(4),
+                                  ),
+                                  child: Row(mainAxisSize: MainAxisSize.min, children: [
+                                    Icon(Icons.emoji_events, size: 13, color: bc.accent),
+                                    const SizedBox(width: 4),
+                                    Text(tr('RECORD', 'RECORD'), style: pixelStyle(size: 9, color: bc.accent)),
+                                  ]),
+                                ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Text(line, style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant, height: 1.35)),
+                          if (compare != null) ...[
+                            const SizedBox(height: 4),
+                            Text(compare, style: monoStyle(size: 12, color: _newBest ? bc.accent : cs.onSurfaceVariant)),
+                          ],
+                        ],
+                      ),
+                    ),
                   ],
                 ),
               ),
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 10),
+            Row(children: [
+              Expanded(child: _ResultStat(value: formatMillis(ms), label: tr('tempo', 'time'))),
+              const SizedBox(width: 8),
+              Expanded(child: _ResultStat(value: '${(avg / 1000).toStringAsFixed(1)}s', label: tr('a domanda', 'per question'))),
+              const SizedBox(width: 8),
+              Expanded(child: _ResultStat(value: '$pct%', label: tr('precisione', 'accuracy'), color: ringColor)),
+            ]),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 4,
+              runSpacing: 4,
+              children: [
+                for (var i = 0; i < _done.length; i++)
+                  Tooltip(
+                    message: '${i + 1} · ${(_done[i].millis / 1000).toStringAsFixed(1)}s',
+                    child: Container(
+                      width: 26,
+                      height: 26,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: (_done[i].ok ? bc.ok : bc.bad).withAlpha(36),
+                        border: Border.all(color: (_done[i].ok ? bc.ok : bc.bad).withAlpha(150)),
+                        borderRadius: appLook.br(4),
+                      ),
+                      child: Text('${i + 1}',
+                          style: monoStyle(size: 11, weight: FontWeight.w800, color: _done[i].ok ? bc.ok : bc.bad)),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            FilledButton.icon(
+              onPressed: () => Navigator.of(context).pushReplacement(PageRouteBuilder<void>(
+                pageBuilder: (_, _, _) => ChallengeRun(config: widget.config),
+                transitionsBuilder: (_, a, _, child) => FadeTransition(opacity: a, child: child),
+              )),
+              icon: const Icon(Icons.replay),
+              label: Text(tr('Riprova', 'Try again')),
+            ),
+            const SizedBox(height: 8),
             Row(
               children: [
                 Expanded(
-                  child: FilledButton.icon(
-                    onPressed: () => Navigator.of(context).pushReplacement(PageRouteBuilder<void>(
-                      pageBuilder: (_, _, _) => ChallengeRun(config: widget.config),
-                      transitionsBuilder: (_, a, _, child) => FadeTransition(opacity: a, child: child),
-                    )),
-                    icon: const Icon(Icons.replay),
-                    label: Text(tr('Riprova', 'Retry')),
+                  child: OutlinedButton.icon(
+                    onPressed: () => showResultShare(
+                      context,
+                      ShareData(
+                        label: widget.config.label,
+                        correct: correct,
+                        total: total,
+                        millis: ms,
+                        newBest: _newBest,
+                        buildPdf: () => resultsPdf(
+                          [for (final d in _done) ResultRow(d.ex, d.given, d.ok, d.millis)],
+                          widget.config.label,
+                          ms,
+                          DateTime.now(),
+                        ),
+                      ),
+                    ),
+                    icon: const Icon(Icons.ios_share, size: 18),
+                    label: Text(tr('Condividi', 'Share')),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -1163,30 +1254,9 @@ class _ChallengeRunState extends State<ChallengeRun> {
                 ),
               ],
             ),
-            const SizedBox(height: 8),
-            OutlinedButton.icon(
-              onPressed: () => showResultShare(
-                context,
-                ShareData(
-                  label: widget.config.label,
-                  correct: correct,
-                  total: total,
-                  millis: ms,
-                  newBest: _newBest,
-                  buildPdf: () => resultsPdf(
-                    [for (final d in _done) ResultRow(d.ex, d.given, d.ok, d.millis)],
-                    widget.config.label,
-                    ms,
-                    DateTime.now(),
-                  ),
-                ),
-              ),
-              icon: const Icon(Icons.ios_share, size: 18),
-              label: Text(tr('Condividi, stampa o PDF', 'Share, print or PDF')),
-            ),
-            const SizedBox(height: 18),
             if (wrong.isNotEmpty) ...[
-              Text(tr('DA RIVEDERE', 'TO REVIEW'), style: pixelStyle(size: 12, color: cs.onSurfaceVariant)),
+              const SizedBox(height: 22),
+              Text(tr('DA RIVEDERE', 'TO REVIEW'), style: pixelStyle(size: 11, color: cs.onSurfaceVariant)),
               const SizedBox(height: 8),
               for (final w in wrong)
                 Padding(
@@ -1203,22 +1273,86 @@ class _ChallengeRunState extends State<ChallengeRun> {
                     ),
                   ),
                 ),
-            ] else
-              Text(tr('Tutto giusto. Pulito.', 'All correct. Clean run.'),
-                  style: TextStyle(color: bc.ok, fontWeight: FontWeight.w800)),
+            ],
           ],
         ),
       ),
     );
   }
+}
 
-  Widget _big(BuildContext context, String v, String label, Color c) => Column(
+class _ResultStat extends StatelessWidget {
+  const _ResultStat({required this.value, required this.label, this.color});
+  final String value;
+  final String label;
+  final Color? color;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = context.cs;
+    return Container(
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+      decoration: BoxDecoration(
+        color: context.bc.panel.withAlpha(context.isDark ? 235 : 245),
+        border: Border.all(color: cs.outlineVariant),
+        borderRadius: appLook.br(6),
+      ),
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(v, style: termStyle(size: 40, color: c)),
-          Text(label.toUpperCase(), style: pixelStyle(size: 9, color: context.cs.onSurfaceVariant)),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(value, maxLines: 1, style: termStyle(size: 30, color: color ?? cs.onSurface)),
+          ),
+          const SizedBox(height: 2),
+          Text(label.toUpperCase(),
+              maxLines: 1, overflow: TextOverflow.ellipsis, style: pixelStyle(size: 8, color: cs.onSurfaceVariant)),
         ],
-      );
+      ),
+    );
+  }
+}
+
+class _ScoreRing extends StatelessWidget {
+  const _ScoreRing({required this.value, required this.color, required this.label});
+  final double value;
+  final Color color;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = context.cs;
+    return SizedBox.square(
+      dimension: 84,
+      child: TweenAnimationBuilder<double>(
+        tween: Tween(begin: 0, end: value),
+        duration: animationsOn(context) ? const Duration(milliseconds: 700) : Duration.zero,
+        curve: Curves.easeOutCubic,
+        builder: (context, v, _) => Stack(
+          fit: StackFit.expand,
+          children: [
+            CircularProgressIndicator(
+              value: v,
+              strokeWidth: 7,
+              strokeCap: StrokeCap.round,
+              color: color,
+              backgroundColor: cs.surfaceContainerHighest,
+            ),
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.all(14),
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(label, style: termStyle(size: 28, color: cs.onSurface)),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 // ---------------------------------------------------------------------------
