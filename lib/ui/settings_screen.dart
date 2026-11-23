@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import '../app/files.dart';
@@ -106,8 +105,18 @@ class SettingsScreen extends StatelessWidget {
                       () => openLegal(context, privacyDoc)),
                   _tile(context, Icons.gavel_outlined, tr('Termini di utilizzo', 'Terms of Use'),
                       () => openLegal(context, termsDoc)),
-                  if (kDonateUrl.isNotEmpty && kIsWeb)
-                    _linkTile(context, Icons.favorite_border, tr('Sostieni Basil con una donazione', 'Support Basil with a donation'), kDonateUrl),
+                  if (kDonateUrl.isNotEmpty && !kPlayBuild)
+                    ListTile(
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 4),
+                      leading: Icon(Icons.coffee_outlined, color: context.bc.accent),
+                      title: Text(tr('Offrimi un caffè', 'Buy me a coffee'),
+                          style: const TextStyle(fontWeight: FontWeight.w700)),
+                      subtitle: Text(tr(
+                          'Facoltativo, mai obbligatorio. Basil resta gratis e completo per tutti, la donazione non sblocca nulla.',
+                          'Optional, never required. Basil stays free and complete for everyone, a donation unlocks nothing.')),
+                      trailing: const Icon(Icons.open_in_new, size: 18),
+                      onTap: () => openExternal(kDonateUrl),
+                    ),
                   _linkTile(context, Icons.code, tr('Codice sorgente su GitHub', 'Source code on GitHub'), kRepoUrl),
                   _linkTile(context, Icons.bug_report_outlined, tr('Segnala un problema', 'Report a problem'), kIssuesUrl),
                   _tile(context, Icons.description_outlined, tr('Licenze', 'Licences'),
