@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../app/settings.dart';
 import '../../app/theme.dart';
 import '../../logic/base_conv.dart';
 import 'fx.dart';
@@ -77,11 +78,11 @@ class BaseKeypad extends StatelessWidget {
         child: Material(
           color: bg ?? context.bc.panelHi,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(5),
+            borderRadius: appLook.br(5),
             side: BorderSide(color: cs.outlineVariant),
           ),
           child: InkWell(
-            borderRadius: BorderRadius.circular(5),
+            borderRadius: appLook.br(5),
             onTap: onTap,
             onLongPress: onLong,
             child: SizedBox(

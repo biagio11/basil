@@ -117,7 +117,7 @@ class _BaseWheelState extends State<BaseWheel> {
       mainAxisSize: MainAxisSize.min,
       children: [
         InkWell(
-          borderRadius: BorderRadius.circular(4),
+          borderRadius: appLook.br(4),
           onTap: _openGrid,
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
@@ -160,7 +160,7 @@ class _BaseWheelState extends State<BaseWheel> {
               height: widget.height,
               decoration: BoxDecoration(
                 color: context.bc.panelHi.withAlpha(context.isDark ? 160 : 255),
-                borderRadius: BorderRadius.circular(6),
+                borderRadius: appLook.br(6),
                 border: Border.all(
                     color: _focus.hasFocus ? cs.primary : cs.outlineVariant),
               ),
@@ -179,7 +179,7 @@ class _BaseWheelState extends State<BaseWheel> {
                       margin: const EdgeInsets.symmetric(horizontal: 6),
                       decoration: BoxDecoration(
                         color: cs.primaryContainer.withAlpha(context.isDark ? 150 : 200),
-                        borderRadius: BorderRadius.circular(4),
+                        borderRadius: appLook.br(4),
                         border: Border.all(color: cs.primary.withAlpha(140)),
                       ),
                     ),
@@ -279,12 +279,12 @@ Future<int?> showBasePicker(BuildContext context, int current, String title,
                             ? cs.primaryContainer
                             : ctx.bc.panelHi,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(5),
+                          borderRadius: appLook.br(5),
                           side: BorderSide(
                               color: b == current ? cs.primary : cs.outlineVariant),
                         ),
                         child: InkWell(
-                          borderRadius: BorderRadius.circular(5),
+                          borderRadius: appLook.br(5),
                           onTap: () => Navigator.of(ctx).pop(b),
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -328,7 +328,7 @@ class QuickBases extends StatelessWidget {
             child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 1.5),
             child: InkWell(
-              borderRadius: BorderRadius.circular(4),
+              borderRadius: appLook.br(4),
               onTap: () => onPick(b),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 180),
@@ -336,7 +336,7 @@ class QuickBases extends StatelessWidget {
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
                   color: value == b ? cs.primary : Colors.transparent,
-                  borderRadius: BorderRadius.circular(4),
+                  borderRadius: appLook.br(4),
                   border: Border.all(
                       color: value == b ? cs.primary : cs.outlineVariant),
                 ),

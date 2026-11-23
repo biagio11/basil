@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'look.dart';
+
 const kBody = 'JetBrainsMono';
 const kPixel = 'Silkscreen';
 const kTerm = 'VT323';
@@ -69,9 +71,10 @@ const _lightBasil = BasilColors(
   grid: Color(0xFFC9DECB),
 );
 
-ThemeData buildTheme(Brightness b) {
+ThemeData buildTheme(Brightness b, [Look? lk]) {
+  final look = lk ?? appLook;
   final dark = b == Brightness.dark;
-  final cs = dark
+  final rawCs = dark
       ? const ColorScheme(
           brightness: Brightness.dark,
           primary: Color(0xFF3DFF7A),
@@ -128,6 +131,9 @@ ThemeData buildTheme(Brightness b) {
           onInverseSurface: Color(0xFFF2F8F0),
           shadow: Color(0x33000000),
         );
+  final cs = _toneScheme(rawCs, look, dark);
+  final basil = _toneBasil(dark ? _darkBasil : _lightBasil, look, dark);
+  final titleFont = fontFor(look.titleFont);
 
   final base = ThemeData(
     useMaterial3: true,
@@ -137,21 +143,23 @@ ThemeData buildTheme(Brightness b) {
     scaffoldBackgroundColor: cs.surface,
   );
   final t = base.textTheme;
+  final tf = titleScale(look.titleFont);
   TextStyle? px(TextStyle? s, double size) => s?.copyWith(
-      fontFamily: kPixel,
+      fontFamily: titleFont,
       fontFamilyFallback: kFallback,
-      fontSize: size,
+      fontSize: size * tf,
+      fontWeight: look.titleFont == 'mono' ? FontWeight.w800 : null,
       letterSpacing: 0.5,
       height: 1.25);
 
-  const radius = BorderRadius.all(Radius.circular(6));
+  final radius = look.br(6);
   final border = OutlineInputBorder(
     borderRadius: radius,
     borderSide: BorderSide(color: cs.outline),
   );
 
   return base.copyWith(
-    extensions: [dark ? _darkBasil : _lightBasil],
+    extensions: [basil],
     textTheme: t.copyWith(
       displaySmall: px(t.displaySmall, 30),
       headlineMedium: px(t.headlineMedium, 24),
@@ -173,7 +181,7 @@ ThemeData buildTheme(Brightness b) {
       foregroundColor: cs.onSurface,
     ),
     cardTheme: CardThemeData(
-      color: dark ? _darkBasil.panel : _lightBasil.panel,
+      color: basil.panel,
       surfaceTintColor: Colors.transparent,
       elevation: 0,
       margin: EdgeInsets.zero,
@@ -190,12 +198,12 @@ ThemeData buildTheme(Brightness b) {
       errorBorder:
           border.copyWith(borderSide: BorderSide(color: cs.error, width: 1.5)),
       filled: true,
-      fillColor: dark ? const Color(0xFF07100A) : Colors.white,
+      fillColor: dark ? (look.pureBlack ? Colors.black : look.tone(const Color(0xFF07100A))) : Colors.white,
       isDense: true,
     ),
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
-        shape: const RoundedRectangleBorder(borderRadius: radius),
+        shape: RoundedRectangleBorder(borderRadius: radius),
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
         textStyle: const TextStyle(
             fontFamily: kBody, fontWeight: FontWeight.w800, letterSpacing: 0.8),
@@ -203,7 +211,7 @@ ThemeData buildTheme(Brightness b) {
     ),
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
-        shape: const RoundedRectangleBorder(borderRadius: radius),
+        shape: RoundedRectangleBorder(borderRadius: radius),
         side: BorderSide(color: cs.outline),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         textStyle: const TextStyle(
@@ -212,7 +220,7 @@ ThemeData buildTheme(Brightness b) {
     ),
     textButtonTheme: TextButtonThemeData(
       style: TextButton.styleFrom(
-        shape: const RoundedRectangleBorder(borderRadius: radius),
+        shape: RoundedRectangleBorder(borderRadius: radius),
         textStyle:
             const TextStyle(fontFamily: kBody, fontWeight: FontWeight.w700),
       ),
@@ -228,7 +236,7 @@ ThemeData buildTheme(Brightness b) {
     ),
     segmentedButtonTheme: SegmentedButtonThemeData(
       style: SegmentedButton.styleFrom(
-        shape: const RoundedRectangleBorder(borderRadius: radius),
+        shape: RoundedRectangleBorder(borderRadius: radius),
         side: BorderSide(color: cs.outline),
         selectedBackgroundColor: cs.primaryContainer,
         selectedForegroundColor: cs.onPrimaryContainer,
@@ -237,33 +245,33 @@ ThemeData buildTheme(Brightness b) {
       ),
     ),
     navigationBarTheme: NavigationBarThemeData(
-      backgroundColor: dark ? const Color(0xF0050906) : const Color(0xF2FFFFFF),
+      backgroundColor: dark ? look.tone(look.pureBlack ? const Color(0xF0000000) : const Color(0xF0050906)) : const Color(0xF2FFFFFF),
       surfaceTintColor: Colors.transparent,
       indicatorColor: cs.primaryContainer,
-      indicatorShape: const RoundedRectangleBorder(borderRadius: radius),
+      indicatorShape: RoundedRectangleBorder(borderRadius: radius),
       height: 68,
       labelTextStyle: WidgetStateProperty.resolveWith((s) => TextStyle(
-            fontFamily: kPixel,
+            fontFamily: titleFont,
             fontFamilyFallback: kFallback,
-            fontSize: 11,
+            fontSize: 11 * tf,
             color: s.contains(WidgetState.selected)
                 ? cs.primary
                 : cs.onSurfaceVariant,
           )),
     ),
     navigationRailTheme: NavigationRailThemeData(
-      backgroundColor: dark ? const Color(0xF0050906) : const Color(0xF2FFFFFF),
+      backgroundColor: dark ? look.tone(look.pureBlack ? const Color(0xF0000000) : const Color(0xF0050906)) : const Color(0xF2FFFFFF),
       indicatorColor: cs.primaryContainer,
-      indicatorShape: const RoundedRectangleBorder(borderRadius: radius),
+      indicatorShape: RoundedRectangleBorder(borderRadius: radius),
       selectedLabelTextStyle: TextStyle(
-          fontFamily: kPixel,
+          fontFamily: titleFont,
           fontFamilyFallback: kFallback,
-          fontSize: 12,
+          fontSize: 12 * tf,
           color: cs.primary),
       unselectedLabelTextStyle: TextStyle(
-          fontFamily: kPixel,
+          fontFamily: titleFont,
           fontFamilyFallback: kFallback,
-          fontSize: 12,
+          fontSize: 12 * tf,
           color: cs.onSurfaceVariant),
     ),
     switchTheme: SwitchThemeData(
@@ -279,19 +287,19 @@ ThemeData buildTheme(Brightness b) {
       backgroundColor: cs.inverseSurface,
       contentTextStyle: TextStyle(
           fontFamily: kBody, color: cs.onInverseSurface, fontWeight: FontWeight.w700),
-      shape: const RoundedRectangleBorder(borderRadius: radius),
+      shape: RoundedRectangleBorder(borderRadius: radius),
     ),
     dialogTheme: DialogThemeData(
-      backgroundColor: dark ? _darkBasil.panel : _lightBasil.panel,
+      backgroundColor: basil.panel,
       surfaceTintColor: Colors.transparent,
       shape: RoundedRectangleBorder(
           borderRadius: radius, side: BorderSide(color: cs.outline)),
     ),
     bottomSheetTheme: BottomSheetThemeData(
-      backgroundColor: dark ? _darkBasil.panel : _lightBasil.panel,
+      backgroundColor: basil.panel,
       surfaceTintColor: Colors.transparent,
       shape: RoundedRectangleBorder(
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(look.radius(10))),
           side: BorderSide(color: cs.outline)),
     ),
     progressIndicatorTheme: ProgressIndicatorThemeData(
@@ -313,6 +321,27 @@ ThemeData buildTheme(Brightness b) {
   );
 }
 
+/// Font family for a font id chosen in personalisation.
+String fontFor(String id) => switch (id) {
+      'term' => kTerm,
+      'mono' => kBody,
+      _ => kPixel,
+    };
+
+/// Size factor so each font looks about as big as Silkscreen.
+double titleScale(String id) => switch (id) {
+      'term' => 1.4,
+      'mono' => 1.05,
+      _ => 1.0,
+    };
+
+/// Size factor relative to VT323 for the big digits.
+double _digitScale(String id) => switch (id) {
+      'mono' => .74,
+      'pixel' => .7,
+      _ => 1.0,
+    };
+
 /// Monospace style for digits (JetBrains Mono, tabular figures).
 TextStyle monoStyle({double size = 18, Color? color, FontWeight? weight}) {
   return TextStyle(
@@ -324,25 +353,81 @@ TextStyle monoStyle({double size = 18, Color? color, FontWeight? weight}) {
   );
 }
 
-/// Big terminal-style digits (VT323).
+/// Big terminal-style digits (VT323 by default, see [Look.digitFont]).
 TextStyle termStyle({double size = 32, Color? color, double? height}) {
+  final id = appLook.digitFont;
   return TextStyle(
-    fontFamily: kTerm,
+    fontFamily: fontFor(id == 'term' ? 'term' : id),
     fontFamilyFallback: kFallback,
-    fontSize: size,
+    fontSize: size * _digitScale(id),
     color: color,
-    height: height ?? 1.0,
+    height: height ?? (id == 'term' ? 1.0 : 1.25),
+    fontWeight: id == 'mono' ? FontWeight.w600 : null,
+    fontFeatures: id == 'mono' ? const [FontFeature.tabularFigures()] : null,
   );
 }
 
-/// Pixel headline style (Silkscreen).
+/// Headline style (Silkscreen by default, see [Look.titleFont]).
 TextStyle pixelStyle({double size = 14, Color? color, FontWeight? weight}) {
+  final id = appLook.titleFont;
   return TextStyle(
-    fontFamily: kPixel,
+    fontFamily: fontFor(id),
     fontFamilyFallback: kFallback,
-    fontSize: size,
+    fontSize: size * titleScale(id),
     color: color,
-    fontWeight: weight,
+    fontWeight: weight ?? (id == 'mono' ? FontWeight.w800 : null),
     letterSpacing: 0.6,
+  );
+}
+
+ColorScheme _toneScheme(ColorScheme s, Look l, bool dark) {
+  if (l.palette == 'basil' && !(dark && l.pureBlack)) return s;
+  Color t(Color c) => l.tone(c);
+  var out = s.copyWith(
+    primary: t(s.primary),
+    onPrimary: t(s.onPrimary),
+    primaryContainer: t(s.primaryContainer),
+    onPrimaryContainer: t(s.onPrimaryContainer),
+    secondary: t(s.secondary),
+    onSecondary: t(s.onSecondary),
+    secondaryContainer: t(s.secondaryContainer),
+    onSecondaryContainer: t(s.onSecondaryContainer),
+    tertiary: l.mono ? s.tertiary : t(s.tertiary),
+    onTertiary: l.mono ? s.onTertiary : t(s.onTertiary),
+    surface: t(s.surface),
+    onSurface: t(s.onSurface),
+    onSurfaceVariant: t(s.onSurfaceVariant),
+    surfaceContainerLowest: t(s.surfaceContainerLowest),
+    surfaceContainerLow: t(s.surfaceContainerLow),
+    surfaceContainer: t(s.surfaceContainer),
+    surfaceContainerHigh: t(s.surfaceContainerHigh),
+    surfaceContainerHighest: t(s.surfaceContainerHighest),
+    outline: t(s.outline),
+    outlineVariant: t(s.outlineVariant),
+    inverseSurface: t(s.inverseSurface),
+    onInverseSurface: t(s.onInverseSurface),
+  );
+  if (dark && l.pureBlack) {
+    out = out.copyWith(
+      surface: Colors.black,
+      surfaceContainerLowest: Colors.black,
+      surfaceContainerLow: const Color(0xFF050505),
+      onInverseSurface: Colors.black,
+    );
+  }
+  return out;
+}
+
+BasilColors _toneBasil(BasilColors b, Look l, bool dark) {
+  if (l.palette == 'basil' && !(dark && l.pureBlack)) return b;
+  final black = dark && l.pureBlack;
+  return BasilColors(
+    ok: b.ok,
+    bad: b.bad,
+    accent: l.mono ? b.accent : l.tone(b.accent),
+    glow: l.tone(b.glow),
+    panel: black ? const Color(0xFF070707) : l.tone(b.panel),
+    panelHi: black ? const Color(0xFF101010) : l.tone(b.panelHi),
+    grid: l.tone(b.grid),
   );
 }

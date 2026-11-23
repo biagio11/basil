@@ -5,8 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'i18n.dart';
+import 'look.dart';
 
 export 'i18n.dart';
+export 'look.dart';
 
 /// App-wide preferences. Everything is stored only on this device
 /// (SharedPreferences / browser localStorage); nothing leaves it.
@@ -19,7 +21,7 @@ class AppSettings extends ChangeNotifier {
   ThemeMode themeMode = ThemeMode.dark;
   String lang = 'it';
   bool animations = true;
-  bool matrix = false;
+  Look look = const Look();
   bool haptics = true;
   bool explain = false;
   bool keypad = true;
@@ -46,7 +48,16 @@ class AppSettings extends ChangeNotifier {
       _ => ThemeMode.dark,
     };
     animations = p?.getBool('animations') ?? true;
-    matrix = p?.getBool('matrix') ?? false;
+    look = const Look();
+    final rawLook = p?.getString('look');
+    if (rawLook != null) {
+      try {
+        look = Look.fromJson(jsonDecode(rawLook) as Map<String, dynamic>);
+      } catch (_) {}
+    } else if (p?.getBool('matrix') ?? false) {
+      look = look.copyWith(background: 'rain'); // older versions had a switch
+    }
+    appLook = look;
     haptics = p?.getBool('haptics') ?? true;
     explain = p?.getBool('explain') ?? false;
     keypad = p?.getBool('keypad') ?? true;
@@ -85,9 +96,11 @@ class AppSettings extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setMatrix(bool v) {
-    matrix = v;
-    _save((p) => p.setBool('matrix', v));
+  void setLook(Look l) {
+    if (l == look) return;
+    look = l;
+    appLook = l;
+    _save((p) => p.setString('look', jsonEncode(l.toJson())));
     notifyListeners();
   }
 

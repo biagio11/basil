@@ -88,7 +88,7 @@ Widget _hexDigitsGrid() {
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
               color: i < 10 ? context.bc.panelHi : cs.primaryContainer,
-              borderRadius: BorderRadius.circular(5),
+              borderRadius: appLook.br(5),
               border: Border.all(
                   color: i < 10 ? cs.outlineVariant : cs.primary.withAlpha(120)),
             ),

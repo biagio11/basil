@@ -108,12 +108,12 @@ class Panel extends StatelessWidget {
       duration: const Duration(milliseconds: 250),
       decoration: BoxDecoration(
         color: bc.panel.withAlpha(context.isDark ? 235 : 245),
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: appLook.br(6),
         border: Border.all(
             color: highlight ? cs.primary : cs.outlineVariant,
             width: highlight ? 1.5 : 1),
         boxShadow: [
-          if (highlight && context.isDark)
+          if (highlight && context.isDark && appLook.glow)
             BoxShadow(color: bc.glow.withAlpha(40), blurRadius: 18),
         ],
       ),
@@ -184,13 +184,24 @@ class _BlinkCursorState extends State<BlinkCursor>
   Widget build(BuildContext context) {
     return AnimatedBuilder(
       animation: _c,
-      builder: (context, _) => Opacity(
-        opacity: _c.value < .5 ? 1 : 0,
-        child: Container(
+      builder: (context, _) {
+        final style = appLook.cursor;
+        return Opacity(
+          opacity: _c.value < .5 ? 1 : 0,
+          child: SizedBox(
             width: widget.width,
             height: widget.height,
-            color: context.cs.primary),
-      ),
+            child: Align(
+              alignment: style == 'under' ? Alignment.bottomCenter : Alignment.centerLeft,
+              child: Container(
+                width: style == 'bar' ? 2.5 : widget.width,
+                height: style == 'under' ? 3 : widget.height,
+                color: context.cs.primary,
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

@@ -190,10 +190,11 @@ class StoryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const green = Color(0xFF3DFF7A);
-    const amber = Color(0xFFFFB000);
-    const fg = Color(0xFFD3F8DA);
-    const muted = Color(0xFF8FB89A);
+    final l = appLook;
+    final green = l.tone(const Color(0xFF3DFF7A));
+    final amber = l.mono ? const Color(0xFFFFB000) : l.tone(const Color(0xFFFFB000));
+    final fg = l.tone(const Color(0xFFD3F8DA));
+    final muted = l.tone(const Color(0xFF8FB89A));
     final pct = data.total == 0 ? 0 : (data.correct * 100 / data.total).round();
     final avg = data.total == 0 ? 0.0 : data.millis / data.total / 1000;
 
@@ -209,15 +210,17 @@ class StoryCard extends StatelessWidget {
         width: 360,
         height: 640,
         child: DecoratedBox(
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [Color(0xFF0B2414), Color(0xFF060B07), Color(0xFF040805)],
+              colors: [
+                for (final c in const [Color(0xFF0B2414), Color(0xFF060B07), Color(0xFF040805)]) l.tone(c)
+              ],
             ),
           ),
           child: CustomPaint(
-            painter: _GridPainter(),
+            painter: _GridPainter(l.tone(const Color(0x143DFF7A))),
             child: Padding(
               padding: const EdgeInsets.fromLTRB(28, 56, 28, 40),
               child: Column(
@@ -232,7 +235,7 @@ class StoryCard extends StatelessWidget {
                   const SizedBox(height: 8),
                   Text(data.label,
                       textAlign: TextAlign.center,
-                      style: const TextStyle(
+                      style: TextStyle(
                           fontFamily: 'JetBrainsMono', fontSize: 12, color: fg, height: 1.4)),
                   const Spacer(),
                   Text(formatMillis(data.millis), style: termStyle(size: 92, color: green)),
@@ -252,14 +255,14 @@ class StoryCard extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                       decoration: BoxDecoration(
                         border: Border.all(color: amber),
-                        borderRadius: BorderRadius.circular(4),
+                        borderRadius: appLook.br(4),
                       ),
                       child: Text(tr('NUOVO RECORD', 'NEW RECORD'),
                           style: pixelStyle(size: 12, color: amber)),
                     ),
                   const Spacer(),
                   Text(kSiteUrl.replaceFirst('https://', ''),
-                      style: const TextStyle(
+                      style: TextStyle(
                           fontFamily: 'JetBrainsMono', fontSize: 12, color: muted)),
                 ],
               ),
@@ -271,13 +274,14 @@ class StoryCard extends StatelessWidget {
   }
 }
 
-ThemeData buildDarkFor(BuildContext context) => _dark ??= buildTheme(Brightness.dark);
-ThemeData? _dark;
+ThemeData buildDarkFor(BuildContext context) => buildTheme(Brightness.dark);
 
 class _GridPainter extends CustomPainter {
+  _GridPainter(this.color);
+  final Color color;
   @override
   void paint(Canvas canvas, Size size) {
-    final p = Paint()..color = const Color(0x143DFF7A);
+    final p = Paint()..color = color;
     for (double x = 0; x < size.width; x += 18) {
       canvas.drawRect(Rect.fromLTWH(x, 0, 1, size.height), p);
     }

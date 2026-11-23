@@ -55,9 +55,11 @@ class BasilApp extends StatelessWidget {
             // Cap text scaling so layouts never break, while still honouring
             // the user's accessibility setting.
             final mq = MediaQuery.of(context);
+            final user = s.look.textScale;
+            final sys = mq.textScaler.clamp(minScaleFactor: 0.9, maxScaleFactor: 1.35);
             return MediaQuery(
               data: mq.copyWith(
-                  textScaler: mq.textScaler.clamp(minScaleFactor: 0.9, maxScaleFactor: 1.35)),
+                  textScaler: TextScaler.linear((sys.scale(100) / 100 * user).clamp(.85, 1.6))),
               child: ThemeReveal(child: BasilBackground(child: child ?? const SizedBox())),
             );
           },

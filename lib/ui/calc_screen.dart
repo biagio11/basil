@@ -402,11 +402,11 @@ class _OpButton extends StatelessWidget {
     return Material(
       color: selected ? cs.primary : context.bc.panelHi,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(5),
+        borderRadius: appLook.br(5),
         side: BorderSide(color: selected ? cs.primary : cs.outlineVariant),
       ),
       child: InkWell(
-        borderRadius: BorderRadius.circular(5),
+        borderRadius: appLook.br(5),
         onTap: onTap,
         child: SizedBox(
           height: 46,

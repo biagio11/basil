@@ -25,7 +25,12 @@ const List<String> kLeafGrid = [
   's...............',
 ];
 
-Map<String, Color> leafPalette(bool dark) => {
+Map<String, Color> leafPalette(bool dark, [Look? look]) {
+  final l = look ?? appLook;
+  return _leafBase(dark).map((k, v) => MapEntry(k, l.tone(v)));
+}
+
+Map<String, Color> _leafBase(bool dark) => {
       'o': dark ? const Color(0xFF1C7A3A) : const Color(0xFF0A3C1A),
       'd': const Color(0xFF166E30),
       'g': const Color(0xFF2EAA4A),
@@ -45,7 +50,7 @@ class PixelLeaf extends StatelessWidget {
       dimension: size,
       child: CustomPaint(
         painter: _LeafPainter(leafPalette(context.isDark),
-            glow: glow && context.isDark, glowColor: context.bc.glow),
+            glow: glow && context.isDark && appLook.glow, glowColor: context.bc.glow),
       ),
     );
   }
@@ -82,7 +87,10 @@ class _LeafPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_LeafPainter old) =>
-      old.pal != pal || old.glow != glow;
+      !_same(old.pal, pal) || old.glow != glow;
+
+  static bool _same(Map<String, Color> a, Map<String, Color> b) =>
+      a.length == b.length && a.keys.every((k) => a[k] == b[k]);
 }
 
 /// Logo: leaf + "BASIL" in pixel font, with a short glitch on tap.

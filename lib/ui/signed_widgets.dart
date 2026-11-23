@@ -60,7 +60,7 @@ class _SignedBitsState extends State<SignedBits> {
                         style: TextStyle(fontSize: 10, color: bc.accent)),
                     const SizedBox(height: 2),
                     InkWell(
-                      borderRadius: BorderRadius.circular(5),
+                      borderRadius: appLook.br(5),
                       onTap: () {
                         hapticTick();
                         setState(() => v = x ^ (1 << (bits - 1 - i)));
@@ -72,7 +72,7 @@ class _SignedBitsState extends State<SignedBits> {
                         alignment: Alignment.center,
                         decoration: BoxDecoration(
                           color: pattern[i] == '1' ? cs.primary : bc.panelHi,
-                          borderRadius: BorderRadius.circular(5),
+                          borderRadius: appLook.br(5),
                           border: Border.all(color: i == 0 ? bc.accent : cs.outlineVariant, width: i == 0 ? 2 : 1),
                         ),
                         child: Text(pattern[i],
