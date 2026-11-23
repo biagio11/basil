@@ -9,9 +9,19 @@ import '../../app/theme.dart';
 /// Falling base-16 glyphs ("digital rain"), drawn very faintly behind the UI.
 /// Throttled to ~20 fps and paused when animations are off.
 class MatrixRain extends StatefulWidget {
-  const MatrixRain({super.key, required this.enabled, this.opacity = 1});
+  const MatrixRain({
+    super.key,
+    required this.enabled,
+    this.opacity = 1,
+    this.glyphs = 16,
+    this.density = 1,
+    this.speed = 1,
+  });
   final bool enabled;
   final double opacity;
+  final int glyphs; // how many symbols: 2, 8, 16 or 36
+  final int density; // 0 low, 1 normal, 2 high
+  final int speed; // 0 slow, 1 normal, 2 fast
 
   @override
   State<MatrixRain> createState() => _MatrixRainState();
@@ -46,7 +56,11 @@ class _MatrixRainState extends State<MatrixRain>
     super.didUpdateWidget(old);
     if (widget.enabled && !_ticker.isActive) _ticker.start();
     if (!widget.enabled && _ticker.isActive) _ticker.stop();
+    if (old.density != widget.density) _drops.clear();
   }
+
+  double get _skip => const [.75, .45, .15][widget.density];
+  double get _mult => const [.5, 1.0, 1.8][widget.speed];
 
   @override
   void dispose() {
@@ -62,7 +76,7 @@ class _MatrixRainState extends State<MatrixRain>
     final cols = (s.width / cell).ceil();
     final rows = s.height / cell;
     for (var c = 0; c < cols; c++) {
-      if (_rng.nextDouble() < .45) continue; // sparse
+      if (_rng.nextDouble() < _skip) continue; // sparse
       _drops.add(_Drop(c, _rng.nextDouble() * rows * 1.5 - rows * .5,
           4 + _rng.nextDouble() * 9, 6 + _rng.nextInt(14)));
     }
@@ -74,7 +88,7 @@ class _MatrixRainState extends State<MatrixRain>
     _last = t;
     final rows = _size.height / cell;
     for (final d in _drops) {
-      d.y += d.speed * dt.clamp(0, .2);
+      d.y += d.speed * _mult * dt.clamp(0, .2);
       if (d.y - d.len > rows) {
         d.y = -_rng.nextDouble() * 10;
         d.speed = 4 + _rng.nextDouble() * 9;
@@ -98,6 +112,7 @@ class _MatrixRainState extends State<MatrixRain>
               drops: _drops,
               repaint: _repaint,
               color: color,
+              glyphs: widget.glyphs,
               strength: (dark ? .55 : .32) * widget.opacity,
             ),
           );
@@ -112,6 +127,7 @@ class _RainPainter extends CustomPainter {
     required this.drops,
     required ValueNotifier<int> repaint,
     required this.color,
+    required this.glyphs,
     required this.strength,
   })  : _frame = repaint,
         super(repaint: repaint);
@@ -119,9 +135,10 @@ class _RainPainter extends CustomPainter {
   final List<_Drop> drops;
   final ValueNotifier<int> _frame;
   final Color color;
+  final int glyphs;
   final double strength;
 
-  static const _glyphs = '0123456789ABCDEF';
+  static const _glyphs = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
   static final Map<String, ui.Paragraph> _cache = {};
 
   ui.Paragraph _glyph(int g, int level, Color color) {
@@ -161,7 +178,7 @@ class _RainPainter extends CustomPainter {
         final level = k == 0 ? 0 : (k < d.len * .35 ? 1 : (k < d.len * .7 ? 2 : 3));
         // Glyphs flicker now and then.
         final seed = (d.col * 73856093) ^ (row * 19349663) ^ ((frame ~/ (6 + k % 5)) * (k == 0 ? 1 : 0));
-        final g = seed.abs() % 16;
+        final g = seed.abs() % glyphs;
         canvas.drawParagraph(_glyph(g, level, color), Offset(d.col * cell + 3, y));
       }
     }
@@ -170,5 +187,5 @@ class _RainPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_RainPainter old) =>
-      old.color != color || old.strength != strength;
+      old.color != color || old.strength != strength || old.glyphs != glyphs;
 }

@@ -7,6 +7,7 @@ import 'common.dart';
 import 'converter_screen.dart';
 import 'lessons_screen.dart';
 import 'settings_screen.dart';
+import 'widgets/backdrops.dart';
 import 'train_screen.dart';
 import 'widgets/fx.dart';
 import 'widgets/matrix_rain.dart';
@@ -219,7 +220,7 @@ class _TermsBar extends StatelessWidget {
   }
 }
 
-/// Background: soft gradient + faint digital rain + scanlines (dark mode).
+/// Background: soft gradient, the chosen effect, scanlines and vignette.
 class BasilBackground extends StatelessWidget {
   const BasilBackground({super.key, required this.child});
   final Widget child;
@@ -228,6 +229,10 @@ class BasilBackground extends StatelessWidget {
   Widget build(BuildContext context) {
     final dark = context.isDark;
     final cs = context.cs;
+    final look = AppSettings.instance.look;
+    final top = dark
+        ? (look.pureBlack ? Colors.black : look.tone(const Color(0xFF0B2414)))
+        : look.tone(const Color(0xFFDDF2DF));
     return Stack(
       children: [
         Positioned.fill(
@@ -236,42 +241,67 @@ class BasilBackground extends StatelessWidget {
               gradient: RadialGradient(
                 center: const Alignment(0.8, -1.1),
                 radius: 1.6,
-                colors: dark
-                    ? [const Color(0xFF0B2414), cs.surface]
-                    : [const Color(0xFFDDF2DF), cs.surface],
+                colors: [top, cs.surface],
               ),
             ),
           ),
         ),
-        Positioned.fill(
-          child: ListenableBuilder(
-            listenable: AppSettings.instance,
-            builder: (context, _) => AppSettings.instance.matrix
-                ? MatrixRain(
-                    enabled: animationsOn(context),
-                    opacity: dark ? .9 : .7,
-                  )
-                : const SizedBox.shrink(),
-          ),
-        ),
-        if (dark)
-          const Positioned.fill(child: IgnorePointer(child: CustomPaint(painter: _Scanlines()))),
+        Positioned.fill(child: Backdrop(look: look)),
+        if (look.scanlines)
+          Positioned.fill(child: IgnorePointer(child: CustomPaint(painter: _Scanlines(dark)))),
+        if (look.vignette) const Positioned.fill(child: Vignette()),
         Positioned.fill(child: child),
       ],
     );
   }
 }
 
+/// The animated effect chosen in personalisation, or nothing.
+class Backdrop extends StatelessWidget {
+  const Backdrop({super.key, required this.look, this.enabled});
+  final Look look;
+  final bool? enabled;
+
+  @override
+  Widget build(BuildContext context) {
+    final on = enabled ?? animationsOn(context);
+    final o = look.intensity;
+    return switch (look.background) {
+      'rain' => MatrixRain(
+          key: const ValueKey('rain'),
+          enabled: on,
+          opacity: o * 1.25,
+          glyphs: look.glyphs,
+          density: look.density,
+          speed: look.speed,
+        ),
+      'grid' => GridBackdrop(
+          key: const ValueKey('grid'), enabled: on, opacity: o * 1.25, density: look.density, speed: look.speed),
+      'bits' => BitsBackdrop(
+          key: const ValueKey('bits'),
+          enabled: on,
+          opacity: o * 1.25,
+          density: look.density,
+          speed: look.speed,
+          glyphs: look.glyphs),
+      'stars' => StarsBackdrop(
+          key: const ValueKey('stars'), enabled: on, opacity: o * 1.25, density: look.density, speed: look.speed),
+      _ => const SizedBox.shrink(),
+    };
+  }
+}
+
 class _Scanlines extends CustomPainter {
-  const _Scanlines();
+  const _Scanlines(this.dark);
+  final bool dark;
   @override
   void paint(Canvas canvas, Size size) {
-    final p = Paint()..color = const Color(0x0A000000);
+    final p = Paint()..color = dark ? const Color(0x0A000000) : const Color(0x07000000);
     for (double y = 0; y < size.height; y += 3) {
       canvas.drawRect(Rect.fromLTWH(0, y, size.width, 1), p);
     }
   }
 
   @override
-  bool shouldRepaint(_Scanlines oldDelegate) => false;
+  bool shouldRepaint(_Scanlines old) => old.dark != dark;
 }
