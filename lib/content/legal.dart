@@ -96,6 +96,16 @@ LegalDoc privacyDoc() => LegalDoc(
               'Links to the source code and to issues lead to GitHub, an external service. If you open an issue, '
               'what you write and your username are public and processed by GitHub as an independent controller '
               'under its own policy. We only use this information to reply and to improve Basil.'),
+          tr('Il sito e l’app possono mostrare un link “Offrimi un caffè” che porta su PayPal. Se scegli di fare una '
+              'donazione, il pagamento avviene interamente su PayPal, che tratta i tuoi dati come titolare autonomo '
+              'secondo la propria informativa. Basil non vede né conserva i tuoi dati di pagamento. PayPal può '
+              'mostrare all’autore il nome, l’indirizzo email e l’eventuale messaggio che inserisci, che vengono usati '
+              'solo per gestire la donazione e gli obblighi di legge collegati.',
+              'The website and the app may show a “Buy me a coffee” link that leads to PayPal. If you choose to donate, the '
+              'payment happens entirely on PayPal, which processes your data as an independent controller under its '
+              'own policy. Basil never sees or stores your payment details. PayPal may show the author the name, '
+              'email address and any message you enter, which are used only to handle the donation and the related '
+              'legal obligations.'),
         ]),
         LegalSection(tr('6. Condivisione, immagini e PDF', '6. Sharing, images and PDFs'), [
           tr('Le immagini dei risultati e i PDF sono creati sul tuo dispositivo. Vengono inviati altrove solo se '
@@ -238,6 +248,16 @@ LegalDoc termsDoc() => LegalDoc(
               'responsabili dei loro contenuti, della loro disponibilità o del loro trattamento dei dati.',
               'Basil contains links to third party services such as GitHub. We do not control these services and '
               'are not responsible for their content, availability or handling of data.'),
+          tr('Donazioni. Basil è e resta gratuito, con tutte le funzioni disponibili per tutti. Una donazione '
+              'tramite il link “Offrimi un caffè” non è obbligatoria in nessun caso: è un regalo spontaneo e '
+              'facoltativo. Non sblocca funzioni, non dà diritto a prestazioni, assistenza o priorità e non crea '
+              'alcun rapporto contrattuale. Il pagamento è gestito da PayPal secondo i suoi termini; per problemi '
+              'con un pagamento puoi rivolgerti a PayPal o scriverci come indicato nella sezione Contatti.',
+              'Donations. Basil is and stays free, with every feature available to everyone. A donation through '
+              'the “Buy me a coffee” link is never required: it is a spontaneous, optional gift. It unlocks no '
+              'features, gives no right to any service, support or priority, and creates no contract. The payment '
+              'is handled by PayPal under its own terms; for problems with a payment you can contact PayPal or '
+              'reach us as described in the Contact section.'),
         ]),
         LegalSection(tr('8. Disponibilità e modifiche', '8. Availability and changes'), [
           tr('Possiamo modificare, sospendere o chiudere Basil, in tutto o in parte, in qualsiasi momento e senza '
