@@ -6,3 +6,6 @@ const String kLegalUpdated = '2026-11-22';
 const String kSiteUrl = 'https://basil-bits.netlify.app';
 const String kRepoUrl = 'https://github.com/biagio11/basil';
 const String kIssuesUrl = 'https://github.com/biagio11/basil/issues';
+
+/// PayPal donation page. Leave empty to hide the donate button.
+const String kDonateUrl = '';

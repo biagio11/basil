@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import '../app/files.dart';
@@ -6,6 +7,7 @@ import '../app/config.dart';
 import '../app/settings.dart';
 import '../content/legal.dart';
 import 'common.dart';
+import 'personalize_screen.dart';
 import 'widgets/fx.dart';
 import 'widgets/pixel_leaf.dart';
 import 'widgets/theme_reveal.dart';
@@ -55,12 +57,14 @@ class SettingsScreen extends StatelessWidget {
                     onSelectionChanged: (v) => s.setLang(v.first),
                   ),
                   const SizedBox(height: 6),
-                  SwitchListTile(
+                  ListTile(
                     contentPadding: const EdgeInsets.symmetric(horizontal: 4),
-                    title: Text(tr('Effetto matrix', 'Matrix effect')),
-                    subtitle: Text(tr('Cifre che scendono sullo sfondo', 'Falling digits in the background')),
-                    value: s.matrix,
-                    onChanged: s.setMatrix,
+                    leading: Icon(Icons.palette_outlined, color: cs.primary),
+                    title: Text(tr('Personalizza', 'Personalise'), style: const TextStyle(fontWeight: FontWeight.w700)),
+                    subtitle: Text(tr('Colori, sfondo animato, caratteri, forme', 'Colours, animated background, fonts, shapes')),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute<void>(builder: (_) => const PersonalizeScreen())),
                   ),
                   SwitchListTile(
                     contentPadding: const EdgeInsets.symmetric(horizontal: 4),
@@ -102,6 +106,8 @@ class SettingsScreen extends StatelessWidget {
                       () => openLegal(context, privacyDoc)),
                   _tile(context, Icons.gavel_outlined, tr('Termini di utilizzo', 'Terms of Use'),
                       () => openLegal(context, termsDoc)),
+                  if (kDonateUrl.isNotEmpty && kIsWeb)
+                    _linkTile(context, Icons.favorite_border, tr('Sostieni Basil con una donazione', 'Support Basil with a donation'), kDonateUrl),
                   _linkTile(context, Icons.code, tr('Codice sorgente su GitHub', 'Source code on GitHub'), kRepoUrl),
                   _linkTile(context, Icons.bug_report_outlined, tr('Segnala un problema', 'Report a problem'), kIssuesUrl),
                   _tile(context, Icons.description_outlined, tr('Licenze', 'Licences'),
