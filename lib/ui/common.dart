@@ -7,23 +7,78 @@ import 'widgets/fx.dart';
 
 export '../app/theme.dart' show monoStyle, termStyle, pixelStyle, BasilThemeX;
 
-/// Tiny markup: **bold** and `code`.
-List<InlineSpan> parseRich(String s, TextStyle code, TextStyle bold) {
+const _subDigits = '₀₁₂₃₄₅₆₇₈₉';
+final _mathRe = RegExp(r'\^(\(?[-−]?[0-9A-Za-zÀ-ÿ]+\)?)|([₀-₉]+)');
+
+/// Plain text where `x^y` becomes a raised small exponent and unicode
+/// subscript digits (101₂) become a lowered small base, like on paper.
+List<InlineSpan> mathSpans(String s, TextStyle style) {
+  if (!s.contains('^') && !s.contains(RegExp('[₀-₉]'))) {
+    return [TextSpan(text: s)];
+  }
+  final out = <InlineSpan>[];
+  final size = style.fontSize ?? 14;
+  final small = style.copyWith(fontSize: size * .66, height: 1);
+  var idx = 0;
+  for (final m in _mathRe.allMatches(s)) {
+    if (m.start > idx) out.add(TextSpan(text: s.substring(idx, m.start)));
+    final sup = m.group(1);
+    final text = sup != null
+        ? sup.replaceAll(RegExp(r'^\(|\)$'), '')
+        : m.group(2)!.split('').map((c) => _subDigits.indexOf(c).toString()).join();
+    out.add(WidgetSpan(
+      alignment: PlaceholderAlignment.baseline,
+      baseline: TextBaseline.alphabetic,
+      child: Transform.translate(
+        offset: Offset(0, sup != null ? -size * .42 : size * .2),
+        child: Text(text, style: small, textScaler: TextScaler.noScaling),
+      ),
+    ));
+    idx = m.end;
+  }
+  if (idx < s.length) out.add(TextSpan(text: s.substring(idx)));
+  return out;
+}
+
+/// A [Text] that draws exponents and bases as real small numbers.
+class MathText extends StatelessWidget {
+  const MathText(this.text, {super.key, this.style, this.textAlign, this.maxLines, this.overflow});
+  final String text;
+  final TextStyle? style;
+  final TextAlign? textAlign;
+  final int? maxLines;
+  final TextOverflow? overflow;
+
+  @override
+  Widget build(BuildContext context) {
+    final st = DefaultTextStyle.of(context).style.merge(style);
+    // RichText scales inline widgets itself, so the plain size goes in.
+    return Text.rich(
+      TextSpan(style: style, children: mathSpans(text, st)),
+      textAlign: textAlign,
+      maxLines: maxLines,
+      overflow: overflow,
+    );
+  }
+}
+
+/// Tiny markup: **bold** and `code`, plus exponents and bases.
+List<InlineSpan> parseRich(String s, TextStyle code, TextStyle bold, {TextStyle base = const TextStyle()}) {
   final spans = <InlineSpan>[];
   final re = RegExp(r'\*\*(.+?)\*\*|`(.+?)`');
   var idx = 0;
   for (final m in re.allMatches(s)) {
-    if (m.start > idx) spans.add(TextSpan(text: s.substring(idx, m.start)));
+    if (m.start > idx) spans.addAll(mathSpans(s.substring(idx, m.start), base));
     final b = m.group(1);
     final mono = m.group(2);
     if (b != null) {
-      spans.add(TextSpan(text: b, style: bold));
+      spans.add(TextSpan(style: bold, children: mathSpans(b, base.merge(bold))));
     } else {
-      spans.add(TextSpan(text: mono, style: code));
+      spans.add(TextSpan(style: code, children: mathSpans(mono!, base.merge(code))));
     }
     idx = m.end;
   }
-  if (idx < s.length) spans.add(TextSpan(text: s.substring(idx)));
+  if (idx < s.length) spans.addAll(mathSpans(s.substring(idx), base));
   return spans;
 }
 
@@ -46,7 +101,7 @@ class RichLine extends StatelessWidget {
     final bold = TextStyle(
         fontWeight: FontWeight.w800, color: color ?? theme.colorScheme.onSurface);
     return Text.rich(
-      TextSpan(style: base, children: parseRich(text, code, bold)),
+      TextSpan(style: base, children: parseRich(text, code, bold, base: base)),
       textAlign: align,
     );
   }
@@ -67,7 +122,7 @@ class InfoCard extends StatelessWidget {
       padding: padding ?? const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: color ?? context.bc.panelHi,
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: appLook.br(6),
         border: Border.all(color: border ?? context.cs.outlineVariant),
       ),
       child: child,
@@ -108,7 +163,7 @@ class DigitRow extends StatelessWidget {
             alignment: Alignment.center,
             decoration: BoxDecoration(
               color: highlight[i] ?? Colors.transparent,
-              borderRadius: BorderRadius.circular(4),
+              borderRadius: appLook.br(4),
             ),
             child: Text(
               cells[i],
@@ -236,11 +291,11 @@ class _QuizCardState extends State<QuizCard> {
     return Material(
       color: bg,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: appLook.br(6),
         side: BorderSide(color: border, width: 1.5),
       ),
       child: InkWell(
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: appLook.br(6),
         onTap: canTap
             ? () {
                 final ok = i == widget.correct;
@@ -262,7 +317,7 @@ class _QuizCardState extends State<QuizCard> {
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
                   color: cs.primary,
-                  borderRadius: BorderRadius.circular(4),
+                  borderRadius: appLook.br(4),
                 ),
                 child: Text(letter,
                     style: pixelStyle(size: 13, color: cs.onPrimary)),
@@ -312,7 +367,7 @@ class PowerTable extends StatelessWidget {
         height: 38,
         padding: const EdgeInsets.symmetric(horizontal: 6),
         alignment: Alignment.center,
-        child: Text(s,
+        child: MathText(s,
             style: monoStyle(
                 size: size,
                 color: color,
@@ -323,7 +378,7 @@ class PowerTable extends StatelessWidget {
     Widget label(String s) => SizedBox(
           width: 112,
           height: 38,
-          child: Align(alignment: Alignment.centerLeft, child: Text(s, style: small)),
+          child: Align(alignment: Alignment.centerLeft, child: MathText(s, style: small)),
         );
 
     Widget rowFor(int visibleFrom, String lab, List<Widget> cells) {
@@ -424,7 +479,7 @@ class DivisionTable extends StatelessWidget {
         decoration: isLast
             ? BoxDecoration(
                 color: cs.primaryContainer.withAlpha(140),
-                borderRadius: BorderRadius.circular(4),
+                borderRadius: appLook.br(4),
               )
             : null,
         children: [
@@ -466,7 +521,7 @@ class DivisionTable extends StatelessWidget {
             style: Theme.of(context).textTheme.bodySmall,
           ),
           const SizedBox(height: 4),
-          SelectableText(
+          MathText(
             '$number = ${withBase(result, base)}',
             style: monoStyle(size: 21, weight: FontWeight.w800, color: cs.primary),
           ),
@@ -498,7 +553,7 @@ class GroupStrip extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
               decoration: BoxDecoration(
                 color: cs.primaryContainer.withAlpha(context.isDark ? 120 : 255),
-                borderRadius: BorderRadius.circular(5),
+                borderRadius: appLook.br(5),
                 border: Border.all(color: cs.primary.withAlpha(90)),
               ),
               child: Column(
@@ -540,7 +595,7 @@ class StepLabel extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
               decoration: BoxDecoration(
                 color: cs.primary,
-                borderRadius: BorderRadius.circular(3),
+                borderRadius: appLook.br(3),
               ),
               child: Text('${tr('PASSO', 'STEP')} $n',
                   style: pixelStyle(size: 9, color: cs.onPrimary)),
@@ -548,7 +603,7 @@ class StepLabel extends StatelessWidget {
             const SizedBox(width: 10),
           ],
           Expanded(
-            child: Text(text,
+            child: MathText(text,
                 style: Theme.of(context)
                     .textTheme
                     .titleSmall

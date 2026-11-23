@@ -129,11 +129,11 @@ class _AnswerInput extends StatelessWidget {
         prefixIconConstraints: const BoxConstraints(minWidth: 0, minHeight: 0),
         suffixText: subscriptOf(base),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(6),
+          borderRadius: appLook.br(6),
           borderSide: BorderSide(color: state == null ? cs.outline : color, width: state == null ? 1 : 2),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(6),
+          borderRadius: appLook.br(6),
           borderSide: BorderSide(color: color, width: 2),
         ),
       ),
@@ -164,8 +164,8 @@ class _QuestionCard extends StatelessWidget {
             Text(ex.question, style: termStyle(size: ex.question.length > 18 ? 34 : 46, color: cs.primary)),
             Padding(
               padding: const EdgeInsets.only(left: 2, bottom: 4),
-              child: Text(subscriptOf(ex.questionBase),
-                  style: monoStyle(size: 16, color: cs.onSurfaceVariant)),
+              child: Text('${ex.questionBase}',
+                  style: monoStyle(size: 17, weight: FontWeight.w700, color: cs.onSurfaceVariant)),
             ),
           ],
         ),
@@ -388,7 +388,7 @@ class _SolutionBox extends StatelessWidget {
           for (final l in ex.solution)
             Padding(
               padding: const EdgeInsets.only(bottom: 4),
-              child: Text(l, style: monoStyle(size: 13)),
+              child: MathText(l, style: monoStyle(size: 13)),
             ),
           const SizedBox(height: 6),
           Text('= ${ex.answerDisplay}',
@@ -412,7 +412,7 @@ class _Stat extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
         color: context.bc.panelHi,
-        borderRadius: BorderRadius.circular(5),
+        borderRadius: appLook.br(5),
         border: Border.all(color: hot ? context.bc.accent : cs.outlineVariant),
       ),
       child: Column(
@@ -1116,7 +1116,7 @@ class _ChallengeRunState extends State<ChallengeRun> {
                   decoration: BoxDecoration(
                     color: bc.accent.withAlpha(30),
                     border: Border.all(color: bc.accent),
-                    borderRadius: BorderRadius.circular(6),
+                    borderRadius: appLook.br(6),
                   ),
                   child: Row(children: [
                     Icon(Icons.emoji_events, color: bc.accent),
@@ -1194,7 +1194,7 @@ class _ChallengeRunState extends State<ChallengeRun> {
                   child: Card(
                     child: ExpansionTile(
                       shape: const Border(),
-                      title: Text(w.ex.prompt, style: monoStyle(size: 14, weight: FontWeight.w700)),
+                      title: MathText(w.ex.prompt, style: monoStyle(size: 14, weight: FontWeight.w700)),
                       subtitle: Text(
                           '${tr('tua', 'yours')}: ${w.given}   ·   ${tr('giusta', 'right')}: ${w.ex.answerDisplay}',
                           style: monoStyle(size: 12, color: bc.bad)),

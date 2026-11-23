@@ -98,7 +98,7 @@ class ConversionExplanation extends StatelessWidget {
         border: Border(left: BorderSide(color: context.cs.primary, width: 3)),
         color: context.cs.primary.withAlpha(18),
       ),
-      child: SelectableText(
+      child: MathText(
         '${n.display}${subscript(from)} = ${res.display}${subscript(to)}',
         style: monoStyle(size: 18, weight: FontWeight.w800, color: context.cs.primary),
       ),
@@ -191,7 +191,7 @@ class FracPowerTable extends StatelessWidget {
           height: 34,
           alignment: Alignment.center,
           padding: const EdgeInsets.symmetric(horizontal: 6),
-          child: Text(s,
+          child: MathText(s,
               style: monoStyle(
                   size: 15, color: color, weight: bold ? FontWeight.w800 : FontWeight.w500)),
         );

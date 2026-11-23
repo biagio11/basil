@@ -70,7 +70,7 @@ class _BitTogglerState extends State<BitToggler> {
                           style: monoStyle(size: 16, color: cs.primary)),
                       const SizedBox(height: 4),
                       InkWell(
-                        borderRadius: BorderRadius.circular(5),
+                        borderRadius: appLook.br(5),
                         onTap: () => setState(() => on[i] = !on[i]),
                         child: Container(
                           width: 48,
@@ -78,7 +78,7 @@ class _BitTogglerState extends State<BitToggler> {
                           alignment: Alignment.center,
                           decoration: BoxDecoration(
                             color: on[i] ? cs.primary : context.bc.panelHi,
-                            borderRadius: BorderRadius.circular(5),
+                            borderRadius: appLook.br(5),
                           ),
                           child: Text(
                             on[i] ? '1' : '0',
@@ -91,7 +91,7 @@ class _BitTogglerState extends State<BitToggler> {
                         ),
                       ),
                       const SizedBox(height: 4),
-                      Text('2^$i', style: Theme.of(context).textTheme.bodySmall),
+                      MathText('2^$i', style: Theme.of(context).textTheme.bodySmall),
                     ],
                   ),
                 ),
@@ -181,7 +181,7 @@ class _RgbMixerState extends State<RgbMixer> {
           height: 90,
           decoration: BoxDecoration(
             color: Color.fromRGBO(r, g, b, 1),
-            borderRadius: BorderRadius.circular(6),
+            borderRadius: appLook.br(6),
           ),
         ),
         const SizedBox(height: 10),
@@ -349,7 +349,7 @@ class _ShiftDemoState extends State<ShiftDemo> {
           child: DigitRow(s.split(''), size: 26),
         ),
         const SizedBox(height: 6),
-        Text('${withBase(s, 2)} = ${parseInBase(s, 2)} in base 10',
+        MathText('${withBase(s, 2)} = ${parseInBase(s, 2)} in base 10',
             style: monoStyle(size: 18, weight: FontWeight.bold)),
         const SizedBox(height: 12),
         Wrap(

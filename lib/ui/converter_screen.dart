@@ -309,9 +309,9 @@ class _ConverterScreenState extends State<ConverterScreen> {
             message: tr('Inverti', 'Swap'),
             child: Material(
               color: cs.primary,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+              shape: RoundedRectangleBorder(borderRadius: appLook.br(6)),
               child: InkWell(
-                borderRadius: BorderRadius.circular(6),
+                borderRadius: appLook.br(6),
                 onTap: _swap,
                 child: const SizedBox(
                   width: 46,
@@ -384,8 +384,8 @@ class _ConverterScreenState extends State<ConverterScreen> {
                 if (res != null)
                   Padding(
                     padding: const EdgeInsets.only(left: 4, bottom: 4),
-                    child: Text(subscript(_to),
-                        style: monoStyle(size: 16, color: cs.onSurfaceVariant)),
+                    child: Text('$_to',
+                        style: monoStyle(size: 17, weight: FontWeight.w700, color: cs.onSurfaceVariant)),
                   ),
               ],
             ),

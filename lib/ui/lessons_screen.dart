@@ -87,7 +87,7 @@ class _LessonCard extends StatelessWidget {
     return Material(
       color: context.bc.panel,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: appLook.br(6),
         side: BorderSide(color: cs.outlineVariant),
       ),
       clipBehavior: Clip.antiAlias,
@@ -103,7 +103,7 @@ class _LessonCard extends StatelessWidget {
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
                   color: cs.primaryContainer.withAlpha(context.isDark ? 140 : 255),
-                  borderRadius: BorderRadius.circular(5),
+                  borderRadius: appLook.br(5),
                   border: Border.all(color: cs.primary.withAlpha(100)),
                 ),
                 child: index > 0
@@ -379,10 +379,10 @@ class CheatSheet extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                         decoration: BoxDecoration(
                           color: context.bc.panelHi,
-                          borderRadius: BorderRadius.circular(5),
+                          borderRadius: appLook.br(5),
                           border: Border.all(color: cs.outlineVariant),
                         ),
-                        child: Text('2^$k = ${1 << k}', style: monoStyle(size: 14, weight: FontWeight.w700)),
+                        child: MathText('2^$k = ${1 << k}', style: monoStyle(size: 14, weight: FontWeight.w700)),
                       ),
                   ],
                 ),
