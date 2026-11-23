@@ -4,8 +4,10 @@ import '../app/settings.dart';
 import '../logic/base_conv.dart';
 import '../ui/common.dart';
 import '../ui/interactives.dart';
+import '../ui/signal_widgets.dart';
 import '../ui/signed_widgets.dart';
 
+part 'signals_lesson.dart';
 part 'signed_lesson.dart';
 
 class Slide {
@@ -115,6 +117,7 @@ Widget _practiceButton(VoidCallback onTap) => Align(
 
 List<Lesson> buildLessons({required VoidCallback onOpenPractice}) {
   return [
+    _signalsLesson(onOpenPractice),
     _baseLesson(onOpenPractice),
     _opsLesson(onOpenPractice),
     _fracLesson(onOpenPractice),
