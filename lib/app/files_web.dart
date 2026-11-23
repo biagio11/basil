@@ -24,6 +24,12 @@ void showPdf(Uint8List bytes, String name, Object? window) {
   }
 }
 
+/// Closes a tab opened with [reserveWindow] that is no longer needed.
+void closeWindow(Object? window) {
+  final w = window as web.Window?;
+  if (w != null && !w.closed) w.close();
+}
+
 void download(Uint8List bytes, String name, String mime) {
   final url = web.URL.createObjectURL(_blob(bytes, mime));
   final a = web.document.createElement('a') as web.HTMLAnchorElement
